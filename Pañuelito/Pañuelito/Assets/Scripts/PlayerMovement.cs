@@ -1,49 +1,161 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 
-public class PlayerMovement : MonoBehaviour
+public class PlayerMovement : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
 {
     [Header("Referencias externas")]
-    public VariableJoystick joystick;   // Joystick UI para mover personajes
-    public Button button1;              // Botón para seleccionar jugador en posición 0
-    public Button button2;              // Botón para seleccionar jugador en posición 1
-    public Button button3;              // Botón para seleccionar jugador en posición 2
+    public VariableJoystick joystick;
+    public Button button1, button2, button3;
+    public Button speedButton;
+    public Button fintButton;
+    public Button takeButton;   // <-- NUEVO BOTÓN
+    public Slider speedBar;
+    public Image speedFill;
 
     [Header("Configuración de movimiento")]
-    public float moveSpeed = 5f;        // Velocidad de movimiento
+    public float baseMoveSpeed = 0f;
+    public float maxSpeed = 20f;
+    public float speedStep = 1f;
+    public float speedDecayRate = 1f;
+
+    [Header("Configuración de finta / tomar")]
+    [Range(0f, 2f)]
+    public float k = 1f;               // multiplicador de altura del brazo
+    public float fintDuration = 1.2f;  // duración total de la finta en segundos
+    public float armRaiseAngle = 100f;  // ángulo máximo hacia delante/arriba
+
+    private float currentSpeed;
+    private bool isSpeedButtonPressed = false;
 
     private HandkerchiefSpawner spawner;
-    private GameObject currentCharacter; // Personaje actualmente seleccionado
+    private GameObject currentCharacter;
+    private Animator currentAnimator;
+
+    private Transform rightArm;
+    private Transform rightHand;   // <-- NUEVO: referencia a la mano derecha
+    private Quaternion originalArmRotation;
+    private Quaternion targetArmRotation;
+    private bool finting = false;
+    private float fintTimer = 0f;
+
+    private GameObject handkerchief;    // referencia al pañuelito en la escena
+    private Vector3 originalHandkerchiefPos;
 
     void Start()
     {
-        // 🔎 Busca el Spawner en la escena
         spawner = FindObjectOfType<HandkerchiefSpawner>();
-
-        if (spawner == null)
+        if (!spawner)
         {
-            Debug.LogError("❌ No se encontró el HandkerchiefSpawner en la escena.");
+            Debug.LogError("❌ No se encontró el HandkerchiefSpawner.");
             return;
         }
 
-        // 🟡 Asigna los listeners de los botones a sus posiciones
+        // Buscamos el pañuelito en la escena
+        handkerchief = GameObject.FindWithTag("Handkerchief");
+        if (handkerchief != null)
+            originalHandkerchiefPos = handkerchief.transform.position;
+
         if (button1 != null) button1.onClick.AddListener(() => SelectCharacter(0));
         if (button2 != null) button2.onClick.AddListener(() => SelectCharacter(1));
         if (button3 != null) button3.onClick.AddListener(() => SelectCharacter(2));
+
+        if (fintButton != null)
+            fintButton.onClick.AddListener(MoveRightArm);
+
+        if (takeButton != null)
+            takeButton.onClick.AddListener(TakeHandkerchief);  // <-- NUEVO
+
+        currentSpeed = baseMoveSpeed;
+        if (speedBar != null)
+        {
+            speedBar.minValue = baseMoveSpeed;
+            speedBar.maxValue = maxSpeed;
+            speedBar.value = currentSpeed;
+            speedBar.direction = Slider.Direction.BottomToTop;
+        }
+
+        if (speedButton != null)
+        {
+            EventTrigger trigger = speedButton.GetComponent<EventTrigger>();
+            if (trigger == null)
+                trigger = speedButton.gameObject.AddComponent<EventTrigger>();
+            else
+                trigger.triggers.Clear();
+
+            var pointerDown = new EventTrigger.Entry { eventID = EventTriggerType.PointerDown };
+            pointerDown.callback.AddListener((data) => OnPointerDown(data as PointerEventData));
+            trigger.triggers.Add(pointerDown);
+
+            var pointerUp = new EventTrigger.Entry { eventID = EventTriggerType.PointerUp };
+            pointerUp.callback.AddListener((data) => OnPointerUp(data as PointerEventData));
+            trigger.triggers.Add(pointerUp);
+        }
     }
 
     void Update()
     {
         if (currentCharacter == null || joystick == null) return;
 
-        // 🎮 Movimiento con joystick solo del jugador seleccionado
+        CameraFollow camFollow = Camera.main.GetComponent<CameraFollow>();
+        Vector3 camForward = camFollow.GetCameraForward();
+        Vector3 camRight = Vector3.Cross(Vector3.up, camForward);
+
         Vector3 move = new Vector3(joystick.Horizontal, 0, joystick.Vertical);
-        currentCharacter.transform.Translate(move * moveSpeed * Time.deltaTime, Space.World);
+        Vector3 moveDir = camForward * move.z + camRight * move.x;
+
+        if (moveDir.magnitude > 0.01f)
+        {
+            currentCharacter.transform.Translate(moveDir.normalized * currentSpeed * Time.deltaTime, Space.World);
+            currentCharacter.transform.rotation = Quaternion.Slerp(
+                currentCharacter.transform.rotation,
+                Quaternion.LookRotation(moveDir),
+                Time.deltaTime * 10f
+            );
+        }
+
+        HandleSpeed();
+        if (currentAnimator != null)
+            currentAnimator.SetFloat("speed", currentSpeed);
+
+        if (speedBar != null && speedFill != null)
+        {
+            speedBar.value = currentSpeed;
+            UpdateBarColor();
+        }
     }
 
-    /// <summary>
-    /// Selecciona un personaje de Team A por índice y hace que la cámara lo siga
-    /// </summary>
+    void LateUpdate()
+    {
+        if (rightArm != null && finting)
+        {
+            fintTimer += Time.deltaTime;
+            float t = fintTimer / fintDuration;
+
+            if (t <= 1f)
+            {
+                float smoothT = Mathf.SmoothStep(0f, 1f, t <= 0.5f ? t * 2f : (1f - t) * 2f);
+                rightArm.localRotation = Quaternion.Slerp(originalArmRotation, targetArmRotation, smoothT);
+            }
+            else
+            {
+                rightArm.localRotation = originalArmRotation;
+                finting = false;
+            }
+        }
+    }
+
+    private void HandleSpeed()
+    {
+        if (isSpeedButtonPressed)
+            currentSpeed += speedStep * Time.deltaTime * 20f;
+        else
+            currentSpeed -= speedDecayRate * Time.deltaTime;
+
+        currentSpeed = Mathf.Clamp(currentSpeed, baseMoveSpeed, maxSpeed);
+        if (speedBar != null) speedBar.value = currentSpeed;
+    }
+
     private void SelectCharacter(int index)
     {
         if (spawner.teamAPlayers == null || index >= spawner.teamAPlayers.Count)
@@ -53,17 +165,85 @@ public class PlayerMovement : MonoBehaviour
         }
 
         currentCharacter = spawner.teamAPlayers[index];
-        Debug.Log($"✅ Jugador seleccionado en posición {index}: {currentCharacter.name}");
-
-        // 🔹 Hacer que la cámara siga al jugador seleccionado
-        CameraFollow cameraFollow = Camera.main.GetComponent<CameraFollow>();
-        if (cameraFollow != null)
+        if (currentCharacter != null)
         {
-            cameraFollow.SetTarget(currentCharacter.transform);
+            currentAnimator = currentCharacter.GetComponentInChildren<Animator>();
+
+            rightArm = currentCharacter.transform.Find("root/root.x/spine_01.x/spine_02.x/spine_03.x/shoulder.r/arm_stretch.r");
+            rightHand = currentCharacter.transform.Find("root/root.x/spine_01.x/spine_02.x/spine_03.x/shoulder.r/arm_stretch.r/hand.r"); // <-- NUEVO
+
+            if (rightArm == null)
+                Debug.LogError("❌ No se encontró el brazo derecho (arm_stretch.r)");
+            else
+                originalArmRotation = rightArm.localRotation;
+
+            if (button1 != null) button1.interactable = (index == 0);
+            if (button2 != null) button2.interactable = (index == 1);
+            if (button3 != null) button3.interactable = (index == 2);
+
+            CameraFollow cam = Camera.main != null ? Camera.main.GetComponent<CameraFollow>() : null;
+            if (cam != null) cam.SetTarget(currentCharacter.transform);
+        }
+    }
+
+    private void MoveRightArm()
+    {
+        if (rightArm == null) return;
+
+        finting = true;
+        fintTimer = 0f;
+
+        Vector3 euler = rightArm.localEulerAngles;
+
+        float targetX = euler.x - armRaiseAngle * k;
+        float targetY = euler.y;
+        float targetZ = euler.z;
+
+        targetArmRotation = Quaternion.Euler(targetX, targetY, targetZ);
+        originalArmRotation = rightArm.localRotation;
+    }
+
+    private void TakeHandkerchief()
+    {
+        if (rightArm == null || rightHand == null || handkerchief == null) return;
+
+        // Animación de brazo (misma que la finta)
+        MoveRightArm();
+
+        // Comprobamos que el jugador esté cerca de la posición original del pañuelito
+        float distPlayer = Vector3.Distance(currentCharacter.transform.position, originalHandkerchiefPos);
+        float distHandkerchief = Vector3.Distance(handkerchief.transform.position, originalHandkerchiefPos);
+
+        if (distPlayer < 2f && distHandkerchief < 0.5f)
+        {
+            // Tomamos el pañuelito y lo ponemos en la mano
+            handkerchief.transform.SetParent(rightHand);
+            handkerchief.transform.localPosition = Vector3.zero;
+            handkerchief.transform.localRotation = Quaternion.identity;
+            Debug.Log("✅ Pañuelito tomado");
         }
         else
         {
-            Debug.LogWarning("❌ No se encontró el script CameraFollow en Main Camera.");
+            Debug.Log("❌ No se cumplen condiciones para tomar el pañuelito");
         }
     }
+
+    private void UpdateBarColor()
+    {
+        if (speedFill == null) return;
+
+        float t = currentSpeed / maxSpeed;
+        t = Mathf.Clamp01(t);
+
+        Color newColor = t < 0.33f
+            ? Color.Lerp(Color.green, Color.yellow, t / 0.33f)
+            : t < 0.66f
+                ? Color.Lerp(Color.yellow, new Color(1f, 0.5f, 0f), (t - 0.33f) / 0.33f)
+                : Color.Lerp(new Color(1f, 0.5f, 0f), Color.red, (t - 0.66f) / 0.34f);
+
+        speedFill.color = newColor;
+    }
+
+    public void OnPointerDown(PointerEventData eventData) => isSpeedButtonPressed = true;
+    public void OnPointerUp(PointerEventData eventData) => isSpeedButtonPressed = false;
 }

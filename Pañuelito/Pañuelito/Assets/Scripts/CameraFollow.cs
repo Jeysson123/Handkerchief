@@ -3,41 +3,107 @@ using UnityEngine;
 public class CameraFollow : MonoBehaviour
 {
     [Header("Jugador a seguir")]
-    public Transform target;          // Transform del jugador seleccionado
+    public Transform target;
 
     [Header("Configuración de cámara")]
-    public float cameraHeightY = 12f;     // Altura de la cámara sobre el jugador
-    public float cameraDistanceZ = -12f;  // Distancia detrás del jugador
-    public float smoothSpeed = 5f;       // Velocidad de seguimiento suave
-    public float cameraLookDownAngle = 17f; // Ángulo de rotación hacia abajo
+    public Vector3 offset = new Vector3(0f, 5f, -7f); // Y aumentado de 3 a 5
+    public float smoothSpeed = 10f;
+    public float rotationSpeed = 0.2f;
+    public float minPitch = -40f;  // Limite hacia abajo
+    public float maxPitch = 45f;
+
+    private float yaw = 0f;
+    private float pitch = 20f; // Pitch inicial hacia abajo más pronunciado
+    private Vector2 lastTouchPos;
+    private bool isDragging = false;
 
     void LateUpdate()
     {
         if (target == null) return;
 
-        // Offset dinámico basado en las variables públicas
-        Vector3 offset = new Vector3(0, cameraHeightY, cameraDistanceZ);
+        // Calcular el centro del jugador usando bounds del Renderer
+        Vector3 lookPos = GetTargetCenter(target);
 
-        // Posición deseada con offset
-        Vector3 desiredPosition = target.position + offset;
+        HandleDragRotation();
 
-        // Movimiento suave de la cámara
-        Vector3 smoothedPosition = Vector3.Lerp(transform.position, desiredPosition, smoothSpeed * Time.deltaTime);
-        transform.position = smoothedPosition;
+        pitch = Mathf.Clamp(pitch, minPitch, maxPitch);
+        Quaternion rotation = Quaternion.Euler(pitch, yaw, 0f);
 
-        // Mira hacia un punto ligeramente por encima del centro del jugador
-        Vector3 lookTarget = target.position + Vector3.up * 1.5f; // centro-cabeza
-        transform.LookAt(lookTarget);
+        Vector3 horizontalOffset = Quaternion.Euler(0, yaw, 0) * new Vector3(offset.x, 0, offset.z);
+        Vector3 desiredPosition = target.position + horizontalOffset + Vector3.up * offset.y;
 
-        // Aplica un ángulo de rotación hacia abajo usando la variable pública
-        transform.rotation = Quaternion.Euler(cameraLookDownAngle, transform.rotation.eulerAngles.y, 0);
+        transform.position = Vector3.Lerp(transform.position, desiredPosition, smoothSpeed * Time.deltaTime);
+        transform.LookAt(lookPos);
     }
 
-    /// <summary>
-    /// Método público para actualizar el jugador a seguir
-    /// </summary>
+    private Vector3 GetTargetCenter(Transform t)
+    {
+        Renderer[] renderers = t.GetComponentsInChildren<Renderer>();
+        if (renderers.Length == 0) return t.position + Vector3.up * 1.5f;
+
+        Bounds bounds = renderers[0].bounds;
+        foreach (Renderer rend in renderers)
+        {
+            bounds.Encapsulate(rend.bounds);
+        }
+
+        return bounds.center;
+    }
+
+    private void HandleDragRotation()
+    {
+#if UNITY_EDITOR || UNITY_STANDALONE
+        if (Input.GetMouseButtonDown(0))
+        {
+            lastTouchPos = Input.mousePosition;
+            isDragging = true;
+        }
+        else if (Input.GetMouseButton(0) && isDragging)
+        {
+            Vector2 delta = (Vector2)Input.mousePosition - lastTouchPos;
+            lastTouchPos = Input.mousePosition;
+
+            yaw += delta.x * rotationSpeed;
+            pitch -= delta.y * rotationSpeed;
+        }
+        else if (Input.GetMouseButtonUp(0))
+        {
+            isDragging = false;
+        }
+#else
+        if (Input.touchCount == 1)
+        {
+            Touch touch = Input.GetTouch(0);
+            if (touch.phase == TouchPhase.Began)
+            {
+                lastTouchPos = touch.position;
+                isDragging = true;
+            }
+            else if (touch.phase == TouchPhase.Moved && isDragging)
+            {
+                Vector2 delta = touch.deltaPosition;
+                yaw += delta.x * rotationSpeed;
+                pitch -= delta.y * rotationSpeed;
+                lastTouchPos = touch.position;
+            }
+            else if (touch.phase == TouchPhase.Ended || touch.phase == TouchPhase.Canceled)
+            {
+                isDragging = false;
+            }
+        }
+#endif
+    }
+
     public void SetTarget(Transform newTarget)
     {
         target = newTarget;
+        yaw = target.eulerAngles.y;
+    }
+
+    public Vector3 GetCameraForward()
+    {
+        Vector3 forward = transform.forward;
+        forward.y = 0;
+        return forward.normalized;
     }
 }
