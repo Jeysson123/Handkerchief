@@ -9,7 +9,7 @@ public class PlayerMovement : MonoBehaviour, IPointerDownHandler, IPointerUpHand
     public Button button1, button2, button3;
     public Button speedButton;
     public Button fintButton;
-    public Button takeButton;   // <-- NUEVO BOTÓN
+    public Button takeButton;   // <-- BOTÓN TOMAR
     public Slider speedBar;
     public Image speedFill;
 
@@ -21,9 +21,12 @@ public class PlayerMovement : MonoBehaviour, IPointerDownHandler, IPointerUpHand
 
     [Header("Configuración de finta / tomar")]
     [Range(0f, 2f)]
-    public float k = 1f;               // multiplicador de altura del brazo
-    public float fintDuration = 1.2f;  // duración total de la finta en segundos
-    public float armRaiseAngle = 100f;  // ángulo máximo hacia delante/arriba
+    public float k = 1f;
+    public float fintDuration = 1.2f;
+    public float armRaiseAngle = 100f;
+
+    [Header("Pañuelito")]
+    public float takeDistance = 2f;           // distancia máxima para tomar
 
     private float currentSpeed;
     private bool isSpeedButtonPressed = false;
@@ -33,29 +36,18 @@ public class PlayerMovement : MonoBehaviour, IPointerDownHandler, IPointerUpHand
     private Animator currentAnimator;
 
     private Transform rightArm;
-    private Transform rightHand;   // <-- NUEVO: referencia a la mano derecha
+    private Transform rightHand;
     private Quaternion originalArmRotation;
     private Quaternion targetArmRotation;
     private bool finting = false;
     private float fintTimer = 0f;
 
-    private GameObject handkerchief;    // referencia al pañuelito en la escena
-    private Vector3 originalHandkerchiefPos;
-
     void Start()
     {
+        // Buscar spawner (si existe)
         spawner = FindObjectOfType<HandkerchiefSpawner>();
-        if (!spawner)
-        {
-            Debug.LogError("❌ No se encontró el HandkerchiefSpawner.");
-            return;
-        }
 
-        // Buscamos el pañuelito en la escena
-        handkerchief = GameObject.FindWithTag("Handkerchief");
-        if (handkerchief != null)
-            originalHandkerchiefPos = handkerchief.transform.position;
-
+        // Listeners para selección (SelectCharacter verifica el spawner internamente)
         if (button1 != null) button1.onClick.AddListener(() => SelectCharacter(0));
         if (button2 != null) button2.onClick.AddListener(() => SelectCharacter(1));
         if (button3 != null) button3.onClick.AddListener(() => SelectCharacter(2));
@@ -64,7 +56,7 @@ public class PlayerMovement : MonoBehaviour, IPointerDownHandler, IPointerUpHand
             fintButton.onClick.AddListener(MoveRightArm);
 
         if (takeButton != null)
-            takeButton.onClick.AddListener(TakeHandkerchief);  // <-- NUEVO
+            takeButton.onClick.AddListener(TakeHandkerchief);
 
         currentSpeed = baseMoveSpeed;
         if (speedBar != null)
@@ -75,6 +67,7 @@ public class PlayerMovement : MonoBehaviour, IPointerDownHandler, IPointerUpHand
             speedBar.direction = Slider.Direction.BottomToTop;
         }
 
+        // Configurar eventos pointer down/up en el botón de velocidad (si existe)
         if (speedButton != null)
         {
             EventTrigger trigger = speedButton.GetComponent<EventTrigger>();
@@ -97,8 +90,16 @@ public class PlayerMovement : MonoBehaviour, IPointerDownHandler, IPointerUpHand
     {
         if (currentCharacter == null || joystick == null) return;
 
-        CameraFollow camFollow = Camera.main.GetComponent<CameraFollow>();
-        Vector3 camForward = camFollow.GetCameraForward();
+        // Obtener forward de cámara de forma segura
+        Vector3 camForward;
+        CameraFollow camFollow = Camera.main != null ? Camera.main.GetComponent<CameraFollow>() : null;
+        if (camFollow != null)
+            camForward = camFollow.GetCameraForward();
+        else if (Camera.main != null)
+            camForward = Vector3.ProjectOnPlane(Camera.main.transform.forward, Vector3.up).normalized;
+        else
+            camForward = Vector3.forward;
+
         Vector3 camRight = Vector3.Cross(Vector3.up, camForward);
 
         Vector3 move = new Vector3(joystick.Horizontal, 0, joystick.Vertical);
@@ -158,23 +159,20 @@ public class PlayerMovement : MonoBehaviour, IPointerDownHandler, IPointerUpHand
 
     private void SelectCharacter(int index)
     {
-        if (spawner.teamAPlayers == null || index >= spawner.teamAPlayers.Count)
-        {
-            Debug.LogWarning($"❌ No hay jugador en el índice {index}");
-            return;
-        }
+       
+        // Verificar que el spawner y la lista existan
+        if (spawner == null || spawner.teamAPlayers == null || index >= spawner.teamAPlayers.Count) return;
 
         currentCharacter = spawner.teamAPlayers[index];
         if (currentCharacter != null)
         {
             currentAnimator = currentCharacter.GetComponentInChildren<Animator>();
 
+            // Buscar huesos (misma ruta que tenías)
             rightArm = currentCharacter.transform.Find("root/root.x/spine_01.x/spine_02.x/spine_03.x/shoulder.r/arm_stretch.r");
-            rightHand = currentCharacter.transform.Find("root/root.x/spine_01.x/spine_02.x/spine_03.x/shoulder.r/arm_stretch.r/hand.r"); // <-- NUEVO
+            rightHand = currentCharacter.transform.Find("root/root.x/spine_01.x/spine_02.x/spine_03.x/shoulder.r/arm_stretch.r/forearm_stretch.r/hand.r");
 
-            if (rightArm == null)
-                Debug.LogError("❌ No se encontró el brazo derecho (arm_stretch.r)");
-            else
+            if (rightArm != null)
                 originalArmRotation = rightArm.localRotation;
 
             if (button1 != null) button1.interactable = (index == 0);
@@ -183,6 +181,11 @@ public class PlayerMovement : MonoBehaviour, IPointerDownHandler, IPointerUpHand
 
             CameraFollow cam = Camera.main != null ? Camera.main.GetComponent<CameraFollow>() : null;
             if (cam != null) cam.SetTarget(currentCharacter.transform);
+
+            //IA call
+            AIController ai = FindObjectOfType<AIController>();
+
+            ai.SelectAICharacter(index); // playerIndex = 0, 1, 2
         }
     }
 
@@ -205,28 +208,48 @@ public class PlayerMovement : MonoBehaviour, IPointerDownHandler, IPointerUpHand
 
     private void TakeHandkerchief()
     {
-        if (rightArm == null || rightHand == null || handkerchief == null) return;
+        GameObject hk = (spawner != null) ? spawner.Handkerchief : null;
+        Vector3 originalPos = (spawner != null) ? spawner.OriginalHandkerchiefPos : Vector3.zero;
 
-        // Animación de brazo (misma que la finta)
+        Debug.Log($"🔎 TAKE DEBUG -> rightArm={rightArm}, rightHand={rightHand}, hk={hk}, currentCharacter={currentCharacter}");
+
+        if (rightArm == null || rightHand == null || hk == null || currentCharacter == null)
+        {
+            Debug.Log("⚠️ TAKE: No se puede tomar (falta brazo, mano, jugador o pañuelito).");
+            return;
+        }
+
+        // Animación del brazo
         MoveRightArm();
 
-        // Comprobamos que el jugador esté cerca de la posición original del pañuelito
-        float distPlayer = Vector3.Distance(currentCharacter.transform.position, originalHandkerchiefPos);
-        float distHandkerchief = Vector3.Distance(handkerchief.transform.position, originalHandkerchiefPos);
+        // Distancia horizontal (XZ) desde el jugador al pañuelo
+        Vector3 playerPosFlat = new Vector3(currentCharacter.transform.position.x, 0, currentCharacter.transform.position.z);
+        Vector3 hkPosFlat = new Vector3(hk.transform.position.x, 0, hk.transform.position.z);
+        float distXZ = Vector3.Distance(playerPosFlat, hkPosFlat);
 
-        if (distPlayer < 2f && distHandkerchief < 0.5f)
+        // Distancia desde posición original del pañuelo
+        float distToOriginal = Vector3.Distance(hk.transform.position, originalPos);
+
+        // Margen de tolerancia horizontal (puedes aumentar si es necesario)
+        float xzTolerance = 5f;
+
+        // Solo importa la distancia horizontal y que el pañuelo esté en su posición original
+        if (distXZ <= xzTolerance && distToOriginal < 0.2f)
         {
-            // Tomamos el pañuelito y lo ponemos en la mano
-            handkerchief.transform.SetParent(rightHand);
-            handkerchief.transform.localPosition = Vector3.zero;
-            handkerchief.transform.localRotation = Quaternion.identity;
-            Debug.Log("✅ Pañuelito tomado");
+            hk.transform.SetParent(rightHand);
+            hk.transform.localPosition = Vector3.zero;
+            hk.transform.localRotation = Quaternion.identity;
+
+            Debug.Log("✅ TAKE: El jugador tomó el pañuelito (aproximación horizontal).");
         }
         else
         {
-            Debug.Log("❌ No se cumplen condiciones para tomar el pañuelito");
+            Debug.Log($"❌ TAKE: No se pudo tomar. DistXZ={distXZ:F2}, DistDesdeOriginal={distToOriginal:F2}");
         }
     }
+
+
+
 
     private void UpdateBarColor()
     {

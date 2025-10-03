@@ -30,40 +30,17 @@ public class HandkerchiefSpawner : MonoBehaviour
     public List<GameObject> teamAPlayers = new List<GameObject>();
     public List<GameObject> teamBPlayers = new List<GameObject>();
 
-    // Posibles nombres de hueso para la mano izquierda
-    private readonly string[] possibleHandNames =
-    {
-        "hand.l",
-        "LeftHand",
-        "mixamorig:LeftHand",
-        "Bip001 L Hand",
-        "Armature_hand_l"
-    };
-
-    private Transform handL;
     private GameObject hk;
+    public GameObject Handkerchief => hk; // ✅ referencia pública al pañuelo
+
+    // ✅ posición original expuesta para PlayerMovement
+    public Vector3 OriginalHandkerchiefPos { get; private set; }
 
     void Start()
     {
-        Debug.Log("🚀 HandkerchiefSpawner START ejecutado");
-
-        if (allPrefabs.Length < playersPerTeam * 2)
-        {
-            Debug.LogError("❌ No hay suficientes prefabs para llenar los equipos!");
-            return;
-        }
-
-        if (centerPrefab == null)
-        {
-            Debug.LogError("❌ No asignaste el prefab central en el inspector!");
-            return;
-        }
-
-        if (handkerchiefPrefab == null)
-        {
-            Debug.LogError("❌ No asignaste el prefab del PAÑUELO en el inspector!");
-            return;
-        }
+        if (allPrefabs.Length < playersPerTeam * 2) return;
+        if (centerPrefab == null) return;
+        if (handkerchiefPrefab == null) return;
 
         List<GameObject> available = new List<GameObject>(allPrefabs);
 
@@ -73,41 +50,20 @@ public class HandkerchiefSpawner : MonoBehaviour
         GameObject center = Instantiate(centerPrefab, centerPosition, Quaternion.identity);
         center.transform.localScale = Vector3.one * scale;
 
-        // 🟡 aplicar borde al centro
-        ApplyOutline(center);
-
-        Debug.Log($"✅ Centro instanciado en {centerPosition}");
-
         Vector3 dirToA = (teamAPosition - centerPosition).normalized;
         dirToA.y = 0;
         Quaternion rot = Quaternion.LookRotation(Vector3.Cross(dirToA, Vector3.up), Vector3.up);
         center.transform.rotation = rot;
-
-        Debug.Log("🔍 Listando huesos del prefab central...");
-        PrintAllChildren(center.transform);
-
-        // 🔎 Buscar hueso de la mano
-        handL = null;
-        foreach (var name in possibleHandNames)
-        {
-            handL = FindDeepChild(center.transform, name);
-            if (handL != null)
-            {
-                Debug.Log($"✅ Hueso encontrado: {handL.name} en {handL.position}");
-                break;
-            }
-        }
 
         // 🎉 Instanciar pañuelo
         Vector3 hkPosition = new Vector3(-26.75f, 6.48f, -15.14f);
         Quaternion hkRotation = Quaternion.Euler(87.688f, 51.121f, -128.9f);
 
         hk = Instantiate(handkerchiefPrefab, hkPosition, hkRotation);
-
-        // Escala fija
         hk.transform.localScale = new Vector3(15f, 15f, 15f);
 
-        Debug.Log($"🎉 Pañuelo instanciado en {hk.transform.position} con rotación {hk.transform.rotation.eulerAngles} y escala {hk.transform.localScale}");
+        // ✅ guardar posición original
+        OriginalHandkerchiefPos = hk.transform.position;
     }
 
     void SpawnTeam(Vector3 basePosition, List<GameObject> available, string teamName)
@@ -146,10 +102,8 @@ public class HandkerchiefSpawner : MonoBehaviour
             GameObject go = Instantiate(available[index], pos, rot);
             go.transform.localScale = Vector3.one * scale;
 
-            // 🟡 aplicar borde al jugador
             ApplyOutline(go);
 
-            // ✅ Guardar en la lista correcta
             if (teamName == "Team A")
                 teamAPlayers.Add(go);
             else
@@ -177,40 +131,6 @@ public class HandkerchiefSpawner : MonoBehaviour
             System.Array.Resize(ref mats, mats.Length + 1);
             mats[mats.Length - 1] = outlineMaterial;
             smr.materials = mats;
-        }
-    }
-
-    Transform FindDeepChild(Transform parent, string childName)
-    {
-        foreach (Transform child in parent)
-        {
-            if (child.name == childName) return child;
-            var result = FindDeepChild(child, childName);
-            if (result != null) return result;
-        }
-        return null;
-    }
-
-    void PrintAllChildren(Transform parent, string indent = "")
-    {
-        Debug.Log(indent + parent.name);
-        foreach (Transform child in parent)
-        {
-            PrintAllChildren(child, indent + "  ");
-        }
-    }
-
-    void OnDrawGizmos()
-    {
-        if (handL != null)
-        {
-            Gizmos.color = Color.red;
-            Gizmos.DrawSphere(handL.position, 0.2f);
-        }
-        if (hk != null)
-        {
-            Gizmos.color = Color.green;
-            Gizmos.DrawWireCube(hk.transform.position, Vector3.one * 0.3f);
         }
     }
 }
