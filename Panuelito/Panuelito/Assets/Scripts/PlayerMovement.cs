@@ -28,10 +28,12 @@ public class PlayerMovement : MonoBehaviour, IPointerDownHandler, IPointerUpHand
     [Header("Pañuelito")]
     public float takeDistance = 2f;           // distancia máxima para tomar
 
-    private float currentSpeed;
+    public float currentSpeed;
     private bool isSpeedButtonPressed = false;
 
     private HandkerchiefSpawner spawner;
+    private Judge judge;
+    private DialogAndEffectsManager dialogAndEffectsManager;
     public GameObject currentCharacter;
     private Animator currentAnimator;
 
@@ -46,6 +48,8 @@ public class PlayerMovement : MonoBehaviour, IPointerDownHandler, IPointerUpHand
     {
         // Buscar spawner (si existe)
         spawner = FindObjectOfType<HandkerchiefSpawner>();
+        judge = FindObjectOfType<Judge>();
+        dialogAndEffectsManager = FindObjectOfType<DialogAndEffectsManager>();
 
         // Listeners para selección (SelectCharacter verifica el spawner internamente)
         if (button1 != null) button1.onClick.AddListener(() => SelectCharacter(0));
@@ -159,7 +163,14 @@ public class PlayerMovement : MonoBehaviour, IPointerDownHandler, IPointerUpHand
 
     private void SelectCharacter(int index)
     {
-       
+
+        //IA call
+        AIController ai = FindObjectOfType<AIController>();
+
+        ai.SelectAICharacter(index); // playerIndex = 0, 1, 2
+
+        judge.ValidateRightPosition(index, dialogAndEffectsManager.numberInDialog); //right number?
+
         // Verificar que el spawner y la lista existan
         if (spawner == null || spawner.teamAPlayers == null || index >= spawner.teamAPlayers.Count) return;
 
@@ -182,11 +193,7 @@ public class PlayerMovement : MonoBehaviour, IPointerDownHandler, IPointerUpHand
 
             CameraFollow cam = Camera.main != null ? Camera.main.GetComponent<CameraFollow>() : null;
             if (cam != null) cam.SetTarget(currentCharacter.transform);
-
-            //IA call
-            AIController ai = FindObjectOfType<AIController>();
-
-            ai.SelectAICharacter(index); // playerIndex = 0, 1, 2
+          
         }
     }
 

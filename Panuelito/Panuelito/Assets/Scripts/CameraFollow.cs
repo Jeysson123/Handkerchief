@@ -12,10 +12,10 @@ public class CameraFollow : MonoBehaviour
     public float minPitch = -40f;  // Limite hacia abajo
     public float maxPitch = 45f;
 
-    private float yaw = 0f;
-    private float pitch = 20f; // Pitch inicial hacia abajo más pronunciado
+    public float yaw = 0f;
+    public float pitch = 20f; // Pitch inicial hacia abajo más pronunciado
     private Vector2 lastTouchPos;
-    private bool isDragging = false;
+    public bool isDragging = false;
 
     void LateUpdate()
     {
@@ -96,6 +96,7 @@ public class CameraFollow : MonoBehaviour
 
     public void SetTarget(Transform newTarget)
     {
+        if(!newTarget) return;
         target = newTarget;
         yaw = target.eulerAngles.y;
     }

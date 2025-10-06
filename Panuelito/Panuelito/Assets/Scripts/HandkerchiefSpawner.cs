@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 using System.Collections.Generic;
 
 public class HandkerchiefSpawner : MonoBehaviour
@@ -10,7 +11,7 @@ public class HandkerchiefSpawner : MonoBehaviour
     public GameObject centerPrefab;
 
     [Header("Prefab del pañuelo")]
-    public GameObject handkerchiefPrefab; // arrastra tu pañuelo aquí
+    public GameObject handkerchiefPrefab;
 
     [Header("Posiciones base")]
     public Vector3 teamAPosition = new Vector3(0f, 0.05f, -10f);
@@ -30,17 +31,51 @@ public class HandkerchiefSpawner : MonoBehaviour
     public List<GameObject> teamAPlayers = new List<GameObject>();
     public List<GameObject> teamBPlayers = new List<GameObject>();
 
-    private GameObject hk;
-    public GameObject Handkerchief => hk; // ✅ referencia pública al pañuelo
+    [Header("Cámara")]
+    public Camera mainCamera;
+    private Vector3 cameraStartPos;
+    private Quaternion cameraStartRot;
 
-    // ✅ posición original expuesta para PlayerMovement
+    [Header("Botones de selección")]
+    public Button[] selectionButtons; // asigna tus botones de selección aquí
+
+    [Header("Barra de velocidad")]
+    public Slider speedSlider;
+    private float originalSpeedValue = 1f;
+
+    private GameObject hk;
+    public GameObject Handkerchief => hk;
+
     public Vector3 OriginalHandkerchiefPos { get; private set; }
+    private PlayerMovement playerMovement;
+    private DialogAndEffectsManager dialogAndEffectsManager;
 
     void Start()
     {
+        playerMovement = FindObjectOfType<PlayerMovement>();
+        dialogAndEffectsManager = FindObjectOfType<DialogAndEffectsManager>();
+
+        if (mainCamera == null)
+            mainCamera = Camera.main;
+
+        if (mainCamera != null)
+        {
+            cameraStartPos = mainCamera.transform.position;
+            cameraStartRot = mainCamera.transform.rotation;
+        }
+
+        if (speedSlider != null)
+            originalSpeedValue = speedSlider.value;
+
+        SpawnAll();
+    }
+
+    public void SpawnAll()
+    {
+        dialogAndEffectsManager.StartShowNumber(); //show number
+
+        if (allPrefabs == null || centerPrefab == null || handkerchiefPrefab == null) return;
         if (allPrefabs.Length < playersPerTeam * 2) return;
-        if (centerPrefab == null) return;
-        if (handkerchiefPrefab == null) return;
 
         List<GameObject> available = new List<GameObject>(allPrefabs);
 
@@ -55,20 +90,34 @@ public class HandkerchiefSpawner : MonoBehaviour
         Quaternion rot = Quaternion.LookRotation(Vector3.Cross(dirToA, Vector3.up), Vector3.up);
         center.transform.rotation = rot;
 
-        // 🎉 Instanciar pañuelo
+        // Instanciar pañuelo
         Vector3 hkPosition = new Vector3(-26.75f, 6.48f, -15.14f);
         Quaternion hkRotation = Quaternion.Euler(87.688f, 51.121f, -128.9f);
 
         hk = Instantiate(handkerchiefPrefab, hkPosition, hkRotation);
         hk.transform.localScale = new Vector3(15f, 15f, 15f);
-
-        // ✅ guardar posición original
         OriginalHandkerchiefPos = hk.transform.position;
+
+        // Restaurar cámara
+        if (mainCamera != null)
+        {
+            mainCamera.transform.position = cameraStartPos;
+            mainCamera.transform.rotation = cameraStartRot;
+        }
+
+        // Restaurar barra de velocidad
+        if (speedSlider != null)
+            speedSlider.value = originalSpeedValue;
+
+        // Habilitar botones de selección
+        EnableSelectionButtons(true);
+
+        playerMovement.currentSpeed = 0f;
     }
 
     void SpawnTeam(Vector3 basePosition, List<GameObject> available, string teamName)
     {
-        if (available.Count == 0) return;
+        if (available == null || available.Count == 0) return;
 
         GameObject temp = Instantiate(available[0]);
         temp.transform.localScale = Vector3.one * scale;
@@ -131,6 +180,16 @@ public class HandkerchiefSpawner : MonoBehaviour
             System.Array.Resize(ref mats, mats.Length + 1);
             mats[mats.Length - 1] = outlineMaterial;
             smr.materials = mats;
+        }
+    }
+
+    private void EnableSelectionButtons(bool enabled)
+    {
+        if (selectionButtons == null || selectionButtons.Length == 0) return;
+        foreach (var btn in selectionButtons)
+        {
+            if (btn != null)
+                btn.interactable = enabled;
         }
     }
 }

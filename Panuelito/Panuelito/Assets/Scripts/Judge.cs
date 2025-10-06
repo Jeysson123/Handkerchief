@@ -4,12 +4,7 @@ using System.Collections.Generic;
 
 public class Judge : MonoBehaviour
 {
-    private enum Team
-    {
-        None,
-        Player,
-        AI
-    }
+    private enum Team { None, Player, AI }
 
     [Header("Marcadores UI")]
     public TextMeshProUGUI playerScoreText;
@@ -38,12 +33,14 @@ public class Judge : MonoBehaviour
     private Dictionary<Transform, Vector3> originalPosByTransform = new Dictionary<Transform, Vector3>();
     private Dictionary<Transform, Vector2> pickupXZByHolder = new Dictionary<Transform, Vector2>();
     private Dictionary<Transform, float> progressTowardsBase = new Dictionary<Transform, float>();
+    private DialogAndEffectsManager effectsManager;
 
     private void Start()
     {
         spawner = FindObjectOfType<HandkerchiefSpawner>();
         playerMovement = FindObjectOfType<PlayerMovement>();
         aIController = FindObjectOfType<AIController>();
+        effectsManager = FindObjectOfType<DialogAndEffectsManager>();
 
         if (spawner != null)
         {
@@ -52,14 +49,23 @@ public class Judge : MonoBehaviour
             RegisterPlayerPositions(spawner.teamAPlayers);
             RegisterPlayerPositions(spawner.teamBPlayers);
 
-            Debug.Log($"[Judge] Bases: playerBase={playerBasePos} | aiBase={aiBasePos} | miembros registrados: {originalPosByTransform.Count}");
         }
         else
         {
-            Debug.LogWarning("[Judge] No se encontró HandkerchiefSpawner en la escena.");
         }
 
         UpdateScoreUI();
+    }
+
+    public void ValidateRightPosition(int selectedIndex, int rightIndex)
+    {
+        int indexFormated = selectedIndex == 2 ? 3 : selectedIndex + 1;
+      
+        if (indexFormated != rightIndex)
+        {
+            Transform iatransform = aIController.currentAICharacter.transform;
+            AddPointToIA("Jugador selecciono , index equivocado → punto.", iatransform);
+        }
     }
 
     private void RegisterPlayerPositions(List<GameObject> list)
@@ -79,7 +85,6 @@ public class Judge : MonoBehaviour
         Transform hkTransform = spawner.Handkerchief.transform;
         Transform holder = FindRootHolder(hkTransform);
 
-        // Detectar cambio de portador
         if (holder != prevHolder)
         {
             if (prevHolder != null)
@@ -90,7 +95,6 @@ public class Judge : MonoBehaviour
 
             if (holder != null)
             {
-                // Registrar correctamente si es Player o IA usando root
                 Transform root = FindRootHolder(holder);
                 if (root != null)
                 {
@@ -101,7 +105,6 @@ public class Judge : MonoBehaviour
                         {
                             pickupXZByHolder[root] = new Vector2(root.position.x, root.position.z);
                             progressTowardsBase[root] = 0f;
-                            Debug.Log($"[Judge] Registrado pickup XZ para {root.name}: {pickupXZByHolder[root].x:F3}, {pickupXZByHolder[root].y:F3}");
                         }
                     }
                     else if (IsTransformInList(root, spawner.teamBPlayers))
@@ -110,81 +113,68 @@ public class Judge : MonoBehaviour
                         lastTouched = Team.None;
                 }
             }
-            else
-            {
-                lastTouched = Team.None;
-            }
+            else lastTouched = Team.None;
 
             prevHolder = holder;
         }
 
         if (holder == null) return;
 
-        bool holderIsTeamA = IsTransformInList(FindRootHolder(holder), spawner.teamAPlayers);
-        bool holderIsTeamB = IsTransformInList(FindRootHolder(holder), spawner.teamBPlayers);
+        bool holderIsTeamA = IsTransformInList(holder, spawner.teamAPlayers);
+        bool holderIsTeamB = IsTransformInList(holder, spawner.teamBPlayers);
 
         // --- LÓGICA IA ---
         if (holderIsTeamB)
         {
-            // Verificar si un jugador intercepta a la IA
             GameObject nearestA = FindNearestInListWithDistance(holder.position, spawner.teamAPlayers, out float nearestADist);
             if (nearestA != null && nearestADist <= interceptDistance)
             {
-                AddPointToPlayer($"Jugador ({nearestA.name}) interceptó a la IA.");
+                AddPointToPlayer($"Jugador ({nearestA.name}) interceptó a la IA.", nearestA.transform);
                 return;
             }
 
-
-            // Progreso hacia la línea del ia
             if (aIController.currentAICharacter != null)
             {
                 Transform iatransform = aIController.currentAICharacter.transform;
                 if (iatransform.position.z >= 112.12)
                 {
-                    AddPointToIA("IA cruzó la línea de puntuación → punto.");
+                    AddPointToIA("IA cruzó la línea de puntuación → punto.", iatransform);
                     return;
                 }
             }
 
-            // Verificar si la IA llega a su base
             if (IsWithinBaseArea(holder, Team.AI))
             {
                 if (lastTouched == Team.AI || lastTouched == Team.None)
-                {
-                    AddPointToIA("IA llegó a su base con el pañuelo.");
-                }
+                    AddPointToIA("IA llegó a su base con el pañuelo.", holder);
                 else
-                {
-                    AddPointToPlayer("Jugador tocó el pañuelo antes de que la IA llegara a su base.");
-                }
+                    AddPointToPlayer("Jugador tocó el pañuelo antes de que la IA llegara a su base.", holder);
                 return;
             }
         }
-
         // --- LÓGICA JUGADOR ---
         else if (holderIsTeamA)
         {
             GameObject nearestB = FindNearestInListWithDistance(holder.position, spawner.teamBPlayers, out float nearestBDist);
             if (nearestB != null && nearestBDist <= interceptDistance)
             {
-                AddPointToIA($"IA ({nearestB.name}) interceptó al jugador.");
+                AddPointToIA($"IA ({nearestB.name}) interceptó al jugador.", nearestB.transform);
                 return;
             }
 
-            // Progreso hacia la línea del jugador
             if (playerMovement.currentCharacter != null)
             {
                 Transform playerTransform = playerMovement.currentCharacter.transform;
                 if (playerTransform.position.z <= -110.8615)
                 {
-                    AddPointToPlayer("Jugador cruzó la línea de puntuación → punto.");
+                    AddPointToPlayer("Jugador cruzó la línea de puntuación → punto.", playerTransform);
                     return;
                 }
             }
 
-            if (IsWithinBaseArea(FindRootHolder(holder), Team.Player))
+            if (IsWithinBaseArea(holder, Team.Player))
             {
-                AddPointToPlayer("Jugador llegó a su base con el pañuelo.");
+                AddPointToPlayer("Jugador llegó a su base con el pañuelo.", holder);
                 return;
             }
         }
@@ -207,9 +197,7 @@ public class Judge : MonoBehaviour
     {
         if (t == null || list == null) return false;
         foreach (var g in list)
-        {
             if (g != null && t == g.transform) return true;
-        }
         return false;
     }
 
@@ -241,43 +229,65 @@ public class Judge : MonoBehaviour
         return Vector2.Distance(holderXZ, baseXZ) <= radius;
     }
 
-    private void AddPointToPlayer(string reason)
+    // 🔥 PUNTOS CON EFECTOS
+    private void AddPointToPlayer(string reason, Transform winner)
     {
-        playerScore++;
-        Debug.Log($"✅ Punto para JUGADOR → {reason}");
-        ResetRound();
-        UpdateScoreUI();
-    }
+        if (roundEnded) return;
 
-    private void AddPointToIA(string reason)
-    {
-        aiScore++;
-        Debug.Log($"✅ Punto para IA → {reason}");
-        ResetRound();
-        UpdateScoreUI();
-    }
-
-    private void ResetRound()
-    {
         roundEnded = true;
+        playerScore++;
+        UpdateScoreUI();
+
+        Debug.Log(reason);
+        if (effectsManager != null)
+            effectsManager.ShowVictoryEffect(winner, "Jugador", OnEffectComplete);
+        else
+            OnEffectComplete();
+    }
+
+    private void AddPointToIA(string reason, Transform winner)
+    {
+        if (roundEnded) return;
+
+        roundEnded = true;
+        aiScore++;
+        UpdateScoreUI();
+
+        Debug.Log(reason);
+        if (effectsManager != null)
+            effectsManager.ShowVictoryEffect(winner, "IA", OnEffectComplete);
+        else
+            OnEffectComplete();
+    }
+
+    private void OnEffectComplete()
+    {
+        roundEnded = false;
         lastTouched = Team.None;
         prevHolder = null;
         pickupXZByHolder.Clear();
         progressTowardsBase.Clear();
-
-        if (spawner != null && spawner.Handkerchief != null)
-        {
-            spawner.Handkerchief.transform.SetParent(null);
-            spawner.Handkerchief.transform.position = spawner.OriginalHandkerchiefPos;
-            spawner.Handkerchief.transform.rotation = Quaternion.identity;
-        }
-
-        Invoke(nameof(NewRound), 1.5f);
     }
 
-    private void NewRound()
+    // 🔄 Reactivar juego después del respawn
+    public void ReinitializeAfterRespawn()
     {
+        originalPosByTransform.Clear();
+        pickupXZByHolder.Clear();
+        progressTowardsBase.Clear();
+
+        if (spawner != null)
+        {
+            RegisterPlayerPositions(spawner.teamAPlayers);
+            RegisterPlayerPositions(spawner.teamBPlayers);
+            playerBasePos = spawner.teamAPosition;
+            aiBasePos = spawner.teamBPosition;
+        }
+
         roundEnded = false;
+        lastTouched = Team.None;
+        prevHolder = null;
+
     }
 
     private void UpdateScoreUI()
