@@ -35,6 +35,8 @@ public class Judge : MonoBehaviour
     private Dictionary<Transform, float> progressTowardsBase = new Dictionary<Transform, float>();
     private DialogAndEffectsManager effectsManager;
 
+    private List<GameObject> hiddenPlayers = new List<GameObject>();
+
     private void Start()
     {
         spawner = FindObjectOfType<HandkerchiefSpawner>();
@@ -48,10 +50,6 @@ public class Judge : MonoBehaviour
             aiBasePos = spawner.teamBPosition;
             RegisterPlayerPositions(spawner.teamAPlayers);
             RegisterPlayerPositions(spawner.teamBPlayers);
-
-        }
-        else
-        {
         }
 
         UpdateScoreUI();
@@ -60,11 +58,11 @@ public class Judge : MonoBehaviour
     public void ValidateRightPosition(int selectedIndex, int rightIndex)
     {
         int indexFormated = selectedIndex == 2 ? 3 : selectedIndex + 1;
-      
+
         if (indexFormated != rightIndex)
         {
             Transform iatransform = aIController.currentAICharacter.transform;
-            AddPointToIA("Jugador selecciono , index equivocado → punto.", iatransform);
+            AddPointToIA("Jugador selecciono , index equivocado → punto IA +1.", iatransform);
         }
     }
 
@@ -129,7 +127,8 @@ public class Judge : MonoBehaviour
             GameObject nearestA = FindNearestInListWithDistance(holder.position, spawner.teamAPlayers, out float nearestADist);
             if (nearestA != null && nearestADist <= interceptDistance)
             {
-                AddPointToPlayer($"Jugador ({nearestA.name}) interceptó a la IA.", nearestA.transform);
+                HideOtherPlayers(nearestA.transform);
+                AddPointToPlayer($"Jugador ({nearestA.name}) interceptó a la IA, → punto JUGADOR +1.", nearestA.transform);
                 return;
             }
 
@@ -138,17 +137,20 @@ public class Judge : MonoBehaviour
                 Transform iatransform = aIController.currentAICharacter.transform;
                 if (iatransform.position.z >= 112.12)
                 {
-                    AddPointToIA("IA cruzó la línea de puntuación → punto.", iatransform);
+                    HideOtherPlayers(iatransform);
+                    AddPointToIA("IA cruzó la línea de puntuación → punto IA +1.", iatransform);
                     return;
                 }
             }
 
             if (IsWithinBaseArea(holder, Team.AI))
             {
+                Transform winner = lastTouched == Team.AI || lastTouched == Team.None ? holder : FindNearestInListWithDistance(holder.position, spawner.teamAPlayers, out _).transform;
+                HideOtherPlayers(winner);
                 if (lastTouched == Team.AI || lastTouched == Team.None)
-                    AddPointToIA("IA llegó a su base con el pañuelo.", holder);
+                    AddPointToIA("IA llegó a su base con el pañuelo, → punto IA +1.", winner);
                 else
-                    AddPointToPlayer("Jugador tocó el pañuelo antes de que la IA llegara a su base.", holder);
+                    AddPointToPlayer("Jugador tocó el pañuelo antes de que la IA llegara a su base. → punto JUGADOR +1.", winner);
                 return;
             }
         }
@@ -158,7 +160,8 @@ public class Judge : MonoBehaviour
             GameObject nearestB = FindNearestInListWithDistance(holder.position, spawner.teamBPlayers, out float nearestBDist);
             if (nearestB != null && nearestBDist <= interceptDistance)
             {
-                AddPointToIA($"IA ({nearestB.name}) interceptó al jugador.", nearestB.transform);
+                HideOtherPlayers(nearestB.transform);
+                AddPointToIA($"IA ({nearestB.name}) interceptó al jugador, → punto IA +1.", nearestB.transform);
                 return;
             }
 
@@ -167,15 +170,42 @@ public class Judge : MonoBehaviour
                 Transform playerTransform = playerMovement.currentCharacter.transform;
                 if (playerTransform.position.z <= -110.8615)
                 {
-                    AddPointToPlayer("Jugador cruzó la línea de puntuación → punto.", playerTransform);
+                    HideOtherPlayers(playerTransform);
+                    AddPointToPlayer("Jugador cruzó la línea de puntuación → punto JUGADOR +1.", playerTransform);
                     return;
                 }
             }
 
             if (IsWithinBaseArea(holder, Team.Player))
             {
-                AddPointToPlayer("Jugador llegó a su base con el pañuelo.", holder);
+                HideOtherPlayers(holder);
+                AddPointToPlayer("Jugador llegó a su base con el pañuelo, → punto JUGADOR +1.", holder);
                 return;
+            }
+        }
+    }
+
+    private void HideOtherPlayers(Transform winner)
+    {
+        hiddenPlayers.Clear();
+
+        foreach (var p in spawner.teamAPlayers)
+        {
+            if (p != null && p.transform != winner)
+            {
+                foreach (Renderer r in p.GetComponentsInChildren<Renderer>())
+                    r.enabled = false;
+                hiddenPlayers.Add(p);
+            }
+        }
+
+        foreach (var p in spawner.teamBPlayers)
+        {
+            if (p != null && p.transform != winner)
+            {
+                foreach (Renderer r in p.GetComponentsInChildren<Renderer>())
+                    r.enabled = false;
+                hiddenPlayers.Add(p);
             }
         }
     }
@@ -238,9 +268,8 @@ public class Judge : MonoBehaviour
         playerScore++;
         UpdateScoreUI();
 
-        Debug.Log(reason);
         if (effectsManager != null)
-            effectsManager.ShowVictoryEffect(winner, "Jugador", OnEffectComplete);
+            effectsManager.ShowVictoryEffect(winner, "Jugador", reason, OnEffectComplete);
         else
             OnEffectComplete();
     }
@@ -253,15 +282,24 @@ public class Judge : MonoBehaviour
         aiScore++;
         UpdateScoreUI();
 
-        Debug.Log(reason);
         if (effectsManager != null)
-            effectsManager.ShowVictoryEffect(winner, "IA", OnEffectComplete);
+            effectsManager.ShowVictoryEffect(winner, "IA", reason, OnEffectComplete);
         else
             OnEffectComplete();
     }
 
     private void OnEffectComplete()
     {
+        foreach (var p in hiddenPlayers)
+        {
+            if (p != null)
+            {
+                foreach (Renderer r in p.GetComponentsInChildren<Renderer>())
+                    r.enabled = true;
+            }
+        }
+        hiddenPlayers.Clear();
+
         roundEnded = false;
         lastTouched = Team.None;
         prevHolder = null;
@@ -287,7 +325,6 @@ public class Judge : MonoBehaviour
         roundEnded = false;
         lastTouched = Team.None;
         prevHolder = null;
-
     }
 
     private void UpdateScoreUI()

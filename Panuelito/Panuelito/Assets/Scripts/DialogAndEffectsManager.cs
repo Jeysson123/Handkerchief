@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using TMPro; // TextMeshPro 3D
+using System.Collections.Generic;
 
 public class DialogAndEffectsManager : MonoBehaviour
 {
@@ -10,7 +11,7 @@ public class DialogAndEffectsManager : MonoBehaviour
 
     [Header("Prefabs de efectos")]
     public GameObject[] victoryEffectPrefabs;
-    [Range(1f, 4f)] public float effectScaleMultiplier = 3.0f;
+    [Range(1f, 4f)] public float effectScaleMultiplier = 4.0f;
     public float effectHeightOffset = 1.5f;
 
     [Header("Animaciones de celebración")]
@@ -43,6 +44,8 @@ public class DialogAndEffectsManager : MonoBehaviour
     [Header("UI de diálogo")]
     public GameObject dialogNumber;      // Objeto padre del texto
     public TextMeshPro textNumber;       // TextMeshPro 3D (no necesita Canvas)
+    public GameObject dialogResult;
+    public TextMeshPro textResult;
 
     private void Start()
     {
@@ -57,8 +60,6 @@ public class DialogAndEffectsManager : MonoBehaviour
             originalTarget = cameraFollow.target;
             originalOffset = cameraFollow.offset;
         }
-
-
     }
 
     public IEnumerator ShowNumber()
@@ -66,7 +67,7 @@ public class DialogAndEffectsManager : MonoBehaviour
         if (dialogNumber == null || textNumber == null) yield break;
 
         dialogNumber.SetActive(true);
-        textNumber.enabled = true;  // muestra el texto
+        textNumber.enabled = true;
 
         numberInDialog = numbersPosition[Random.Range(0, numbersPosition.Length)];
         textNumber.text = numberInDialog.ToString();
@@ -74,8 +75,7 @@ public class DialogAndEffectsManager : MonoBehaviour
         yield return new WaitForSeconds(2f);
 
         dialogNumber.SetActive(false);
-        textNumber.enabled = false; 
-
+        textNumber.enabled = false;
     }
 
     public void StartShowNumber()
@@ -83,8 +83,12 @@ public class DialogAndEffectsManager : MonoBehaviour
         StartCoroutine(ShowNumber());
     }
 
-    public void ShowVictoryEffect(Transform winner, string teamName, System.Action onComplete = null)
+    public void ShowVictoryEffect(Transform winner, string teamName, string reason, System.Action onComplete = null)
     {
+        dialogResult.transform.position = new Vector3(winner.position.x - 15f, winner.position.y + 10f, winner.position.z);
+        textResult.gameObject.transform.position = new Vector3(winner.position.x + 27f, winner.position.y - 12f, winner.position.z - 1);
+        textResult.text = reason;
+
         if (isPlayingEffect || winner == null) return;
         StartCoroutine(PlayEffectAndRestart(winner, teamName, onComplete));
     }
@@ -92,10 +96,33 @@ public class DialogAndEffectsManager : MonoBehaviour
     private IEnumerator PlayEffectAndRestart(Transform winner, string teamName, System.Action onComplete)
     {
         isPlayingEffect = true;
+        dialogResult.SetActive(true);
+        textResult.gameObject.SetActive(true);
 
         if (playerMovement != null) playerMovement.enabled = false;
         if (aiController != null) aiController.enabled = false;
 
+        // ✅ Ocultar todos los personajes menos el ganador
+        List<GameObject> hiddenPlayers = new List<GameObject>();
+        if (spawner != null)
+        {
+            List<GameObject> allPlayers = new List<GameObject>();
+            allPlayers.AddRange(spawner.teamAPlayers);
+            allPlayers.AddRange(spawner.teamBPlayers);
+
+            foreach (var p in allPlayers)
+            {
+                if (p != null && p.transform != winner)
+                {
+                    Renderer[] renderers = p.GetComponentsInChildren<Renderer>();
+                    foreach (Renderer r in renderers)
+                        r.enabled = false;
+                    hiddenPlayers.Add(p);
+                }
+            }
+        }
+
+        // Guardar cámara
         if (cameraFollow != null)
         {
             originalTarget = cameraFollow.target;
@@ -183,7 +210,14 @@ public class DialogAndEffectsManager : MonoBehaviour
             if (victoryEffectPrefabs != null && victoryEffectPrefabs.Length > 0)
             {
                 int effectIndex = Random.Range(0, victoryEffectPrefabs.Length);
-                Vector3 effectPos = winner.position + Vector3.up * effectHeightOffset;
+
+                // 🔥 Ajuste automático de altura basado en el collider del personaje
+                float characterHeight = 2f; // valor por defecto
+                Collider col = winner.GetComponent<Collider>();
+                if (col != null) characterHeight = col.bounds.size.y;
+
+                Vector3 effectPos = winner.position + Vector3.up * (characterHeight * 0.9f + effectHeightOffset);
+
                 GameObject effect = Instantiate(victoryEffectPrefabs[effectIndex], effectPos, winner.rotation);
                 effect.transform.localScale *= effectScaleMultiplier;
                 Destroy(effect, effectDuration);
@@ -191,6 +225,17 @@ public class DialogAndEffectsManager : MonoBehaviour
         }
 
         yield return new WaitForSeconds(effectDuration);
+
+        // ✅ Volver a mostrar los personajes ocultos
+        foreach (var p in hiddenPlayers)
+        {
+            if (p != null)
+            {
+                Renderer[] renderers = p.GetComponentsInChildren<Renderer>();
+                foreach (Renderer r in renderers)
+                    r.enabled = true;
+            }
+        }
 
         // Restaurar cámara
         if (cameraFollow != null)
@@ -239,6 +284,9 @@ public class DialogAndEffectsManager : MonoBehaviour
 
         if (playerMovement != null) playerMovement.enabled = true;
         if (aiController != null) aiController.enabled = true;
+
+        dialogResult.SetActive(false);
+        textResult.gameObject.SetActive(false);
 
         isPlayingEffect = false;
         onComplete?.Invoke();
