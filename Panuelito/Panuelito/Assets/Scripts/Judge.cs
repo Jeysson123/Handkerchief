@@ -36,6 +36,7 @@ public class Judge : MonoBehaviour
     private DialogAndEffectsManager effectsManager;
 
     private List<GameObject> hiddenPlayers = new List<GameObject>();
+    private CinematicCameraController cinematicCamera;
 
     private void Start()
     {
@@ -43,6 +44,7 @@ public class Judge : MonoBehaviour
         playerMovement = FindObjectOfType<PlayerMovement>();
         aIController = FindObjectOfType<AIController>();
         effectsManager = FindObjectOfType<DialogAndEffectsManager>();
+        cinematicCamera = FindObjectOfType<CinematicCameraController>();
 
         if (spawner != null)
         {
@@ -125,9 +127,16 @@ public class Judge : MonoBehaviour
         if (holderIsTeamB)
         {
             GameObject nearestA = FindNearestInListWithDistance(holder.position, spawner.teamAPlayers, out float nearestADist);
+            if (nearestA != null && nearestADist <= interceptDistance + 3f)
+            {
+                cinematicCamera.PlayCinematic(playerMovement.currentCharacter.transform); //play slow motion
+            }
+
             if (nearestA != null && nearestADist <= interceptDistance)
             {
+                playerMovement.MoveRightArm();
                 HideOtherPlayers(nearestA.transform);
+                cinematicCamera.PlayCinematic(playerMovement.currentCharacter.transform); //play slow motion
                 AddPointToPlayer($"Jugador ({nearestA.name}) interceptó a la IA, → punto JUGADOR +1.", nearestA.transform);
                 return;
             }
@@ -158,8 +167,15 @@ public class Judge : MonoBehaviour
         else if (holderIsTeamA)
         {
             GameObject nearestB = FindNearestInListWithDistance(holder.position, spawner.teamBPlayers, out float nearestBDist);
+
+            if (nearestB != null && nearestBDist <= interceptDistance + 3f)
+            {
+                cinematicCamera.PlayCinematic(aIController.currentAICharacter.transform); //play slow motion
+            }
+
             if (nearestB != null && nearestBDist <= interceptDistance)
             {
+                aIController.MoveRightArm();
                 HideOtherPlayers(nearestB.transform);
                 AddPointToIA($"IA ({nearestB.name}) interceptó al jugador, → punto IA +1.", nearestB.transform);
                 return;

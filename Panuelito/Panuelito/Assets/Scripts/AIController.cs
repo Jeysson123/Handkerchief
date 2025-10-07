@@ -25,9 +25,12 @@ public class AIController : MonoBehaviour
     private bool isActing = false;
     private bool returningToBase = false;
     private Vector3 aiOriginalPos;
+    private CinematicCameraController cinematicCamera;
+    public bool playSlowMotion = true;
 
     void Start()
     {
+        cinematicCamera = FindObjectOfType<CinematicCameraController>();
         if (spawner == null)
             spawner = FindObjectOfType<HandkerchiefSpawner>();
     }
@@ -75,6 +78,12 @@ public class AIController : MonoBehaviour
         {
             // IA regresando a su posición original
             targetPos = aiOriginalPos;
+            if (playSlowMotion)
+            {
+                cinematicCamera.PlayCinematic(currentAICharacter.transform); //play slow motion
+                playSlowMotion = false;
+            }
+
         }
         else
         {
@@ -140,7 +149,7 @@ public class AIController : MonoBehaviour
         isActing = false;
     }
 
-    private void MoveRightArm()
+    public void MoveRightArm()
     {
         if (rightArm == null) return;
 

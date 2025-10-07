@@ -44,12 +44,16 @@ public class PlayerMovement : MonoBehaviour, IPointerDownHandler, IPointerUpHand
     private bool finting = false;
     private float fintTimer = 0f;
 
+    private CinematicCameraController cinematicCamera;
+
+
     void Start()
     {
         // Buscar spawner (si existe)
         spawner = FindObjectOfType<HandkerchiefSpawner>();
         judge = FindObjectOfType<Judge>();
         dialogAndEffectsManager = FindObjectOfType<DialogAndEffectsManager>();
+        cinematicCamera = FindObjectOfType<CinematicCameraController>();
 
         // Listeners para selección (SelectCharacter verifica el spawner internamente)
         if (button1 != null) button1.onClick.AddListener(() => SelectCharacter(0));
@@ -197,7 +201,7 @@ public class PlayerMovement : MonoBehaviour, IPointerDownHandler, IPointerUpHand
         }
     }
 
-    private void MoveRightArm()
+    public void MoveRightArm()
     {
         if (rightArm == null) return;
 
@@ -244,6 +248,9 @@ public class PlayerMovement : MonoBehaviour, IPointerDownHandler, IPointerUpHand
             hk.transform.SetParent(rightHand);
             hk.transform.localPosition = Vector3.zero;
             hk.transform.localRotation = Quaternion.identity;
+
+            cinematicCamera.PlayCinematic(currentCharacter.transform); //play slow motion
+
         }
         else
         {

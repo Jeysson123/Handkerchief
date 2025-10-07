@@ -85,6 +85,10 @@ public class DialogAndEffectsManager : MonoBehaviour
 
     public void ShowVictoryEffect(Transform winner, string teamName, string reason, System.Action onComplete = null)
     {
+        if (teamName.Equals("IA"))
+        {
+            aiController.playSlowMotion = true;
+        }
         dialogResult.transform.position = new Vector3(winner.position.x - 15f, winner.position.y + 10f, winner.position.z);
         textResult.gameObject.transform.position = new Vector3(winner.position.x + 27f, winner.position.y - 12f, winner.position.z - 1);
         textResult.text = reason;

@@ -6039,7 +6039,6 @@ GameObject:
   m_Component:
   - component: {fileID: 775137833}
   - component: {fileID: 775137835}
-  - component: {fileID: 775137837}
   - component: {fileID: 775137838}
   m_Layer: 0
   m_Name: Result
@@ -6110,14 +6109,6 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 5
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!222 &775137837
-CanvasRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 775137832}
-  m_CullTransparentMesh: 1
 --- !u!114 &775137838
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7256,6 +7247,7 @@ GameObject:
   - component: {fileID: 963194226}
   - component: {fileID: 963194229}
   - component: {fileID: 963194230}
+  - component: {fileID: 963194231}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -7402,6 +7394,22 @@ MonoBehaviour:
   yaw: 0
   pitch: 20
   isDragging: 0
+--- !u!114 &963194231
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 963194225}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8f9d85862ceba1949947b3171d865a14, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  cinematicDuration: 3
+  rotationSpeed: 30
+  zoomDistance: 25
+  slowMotionScale: 0.1
 --- !u!1001 &979929107
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -11625,7 +11633,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3881087803549984436, guid: 8691c0ff35995fc41804ff878f099acb, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: -50.0011
+      value: -50.000977
       objectReference: {fileID: 0}
     - target: {fileID: 3881087803549984436, guid: 8691c0ff35995fc41804ff878f099acb, type: 3}
       propertyPath: m_AnchoredPosition.y
