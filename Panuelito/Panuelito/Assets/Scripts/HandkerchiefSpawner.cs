@@ -37,7 +37,7 @@ public class HandkerchiefSpawner : MonoBehaviour
     private Quaternion cameraStartRot;
 
     [Header("Botones de selección")]
-    public Button[] selectionButtons; // asigna tus botones de selección aquí
+    public Button[] selectionButtons;
 
     [Header("Barra de velocidad")]
     public Slider speedSlider;
@@ -45,10 +45,18 @@ public class HandkerchiefSpawner : MonoBehaviour
 
     private GameObject hk;
     public GameObject Handkerchief => hk;
-
     public Vector3 OriginalHandkerchiefPos { get; private set; }
+
     private PlayerMovement playerMovement;
     private DialogAndEffectsManager dialogAndEffectsManager;
+
+    // 🔹 Variables para controlar los personajes iniciales
+    private List<GameObject> fixedTeamAPrefabs = new List<GameObject>();
+    private List<GameObject> fixedTeamBPrefabs = new List<GameObject>();
+    private bool firstSpawnDone = false;
+
+    // 🔹 Contador de respawns
+    private int respawnCount = 0;
 
     void Start()
     {
@@ -72,16 +80,33 @@ public class HandkerchiefSpawner : MonoBehaviour
 
     public void SpawnAll()
     {
-        dialogAndEffectsManager.StartShowNumber(); //show number
+        dialogAndEffectsManager.StartShowNumber();
 
         if (allPrefabs == null || centerPrefab == null || handkerchiefPrefab == null) return;
         if (allPrefabs.Length < playersPerTeam * 2) return;
 
-        List<GameObject> available = new List<GameObject>(allPrefabs);
+        // 🔹 Eliminar los jugadores anteriores si existen
+        foreach (var go in teamAPlayers) Destroy(go);
+        foreach (var go in teamBPlayers) Destroy(go);
+        teamAPlayers.Clear();
+        teamBPlayers.Clear();
 
-        SpawnTeam(teamAPosition, available, "Team A");
-        SpawnTeam(teamBPosition, available, "Team B");
+        respawnCount++;
 
+        // 🔹 Si es el primer spawn → elige personajes aleatorios
+        // 🔹 Si es el segundo o más → usa los mismos que se guardaron en el primero
+        if (respawnCount == 1)
+        {
+            List<GameObject> available = new List<GameObject>(allPrefabs);
+            fixedTeamAPrefabs = ChooseFixedPrefabs(available, playersPerTeam);
+            fixedTeamBPrefabs = ChooseFixedPrefabs(available, playersPerTeam);
+            firstSpawnDone = true;
+        }
+
+        SpawnTeam(teamAPosition, fixedTeamAPrefabs, "Team A");
+        SpawnTeam(teamBPosition, fixedTeamBPrefabs, "Team B");
+
+        // Centro y pañuelo
         GameObject center = Instantiate(centerPrefab, centerPosition, Quaternion.identity);
         center.transform.localScale = Vector3.one * scale;
 
@@ -90,36 +115,45 @@ public class HandkerchiefSpawner : MonoBehaviour
         Quaternion rot = Quaternion.LookRotation(Vector3.Cross(dirToA, Vector3.up), Vector3.up);
         center.transform.rotation = rot;
 
-        // Instanciar pañuelo
+        // Crear el pañuelo
         Vector3 hkPosition = new Vector3(-26.75f, 6.48f, -15.14f);
         Quaternion hkRotation = Quaternion.Euler(87.688f, 51.121f, -128.9f);
-
         hk = Instantiate(handkerchiefPrefab, hkPosition, hkRotation);
         hk.transform.localScale = new Vector3(15f, 15f, 15f);
         OriginalHandkerchiefPos = hk.transform.position;
 
-        // Restaurar cámara
+        // Restaurar cámara y velocidad
         if (mainCamera != null)
         {
             mainCamera.transform.position = cameraStartPos;
             mainCamera.transform.rotation = cameraStartRot;
         }
 
-        // Restaurar barra de velocidad
         if (speedSlider != null)
             speedSlider.value = originalSpeedValue;
 
-        // Habilitar botones de selección
         EnableSelectionButtons(true);
-
         playerMovement.currentSpeed = 0f;
     }
 
-    void SpawnTeam(Vector3 basePosition, List<GameObject> available, string teamName)
+    // 🔹 Método auxiliar para elegir los personajes iniciales
+    private List<GameObject> ChooseFixedPrefabs(List<GameObject> available, int count)
     {
-        if (available == null || available.Count == 0) return;
+        List<GameObject> chosen = new List<GameObject>();
+        for (int i = 0; i < count && available.Count > 0; i++)
+        {
+            int index = Random.Range(0, available.Count);
+            chosen.Add(available[index]);
+            available.RemoveAt(index);
+        }
+        return chosen;
+    }
 
-        GameObject temp = Instantiate(available[0]);
+    void SpawnTeam(Vector3 basePosition, List<GameObject> prefabs, string teamName)
+    {
+        if (prefabs == null || prefabs.Count == 0) return;
+
+        GameObject temp = Instantiate(prefabs[0]);
         temp.transform.localScale = Vector3.one * scale;
 
         Renderer[] rends = temp.GetComponentsInChildren<Renderer>();
@@ -134,11 +168,8 @@ public class HandkerchiefSpawner : MonoBehaviour
 
         float totalSpacing = prefabWidth - spacingReduction;
 
-        for (int i = 0; i < playersPerTeam; i++)
+        for (int i = 0; i < prefabs.Count; i++)
         {
-            if (available.Count == 0) break;
-
-            int index = Random.Range(0, available.Count);
             float xOffset = (i - (playersPerTeam - 1) / 2f) * totalSpacing;
             Vector3 pos = basePosition + new Vector3(xOffset, 0, 0);
 
@@ -148,17 +179,14 @@ public class HandkerchiefSpawner : MonoBehaviour
             Quaternion rot = Quaternion.LookRotation(dirToCenter.normalized, Vector3.up);
             if (Mathf.Abs(facingOffsetY) > 0.001f) rot *= Quaternion.Euler(0f, facingOffsetY, 0f);
 
-            GameObject go = Instantiate(available[index], pos, rot);
+            GameObject go = Instantiate(prefabs[i], pos, rot);
             go.transform.localScale = Vector3.one * scale;
-
             ApplyOutline(go);
 
             if (teamName == "Team A")
                 teamAPlayers.Add(go);
             else
                 teamBPlayers.Add(go);
-
-            available.RemoveAt(index);
         }
     }
 

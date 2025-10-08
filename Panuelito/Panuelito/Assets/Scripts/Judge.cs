@@ -127,7 +127,7 @@ public class Judge : MonoBehaviour
         if (holderIsTeamB)
         {
             GameObject nearestA = FindNearestInListWithDistance(holder.position, spawner.teamAPlayers, out float nearestADist);
-            if (nearestA != null && nearestADist <= interceptDistance + 3f)
+            if (nearestA != null && nearestADist <= interceptDistance + 2f)
             {
                 cinematicCamera.PlayCinematic(playerMovement.currentCharacter.transform); //play slow motion
             }
@@ -168,7 +168,7 @@ public class Judge : MonoBehaviour
         {
             GameObject nearestB = FindNearestInListWithDistance(holder.position, spawner.teamBPlayers, out float nearestBDist);
 
-            if (nearestB != null && nearestBDist <= interceptDistance + 3f)
+            if (nearestB != null && nearestBDist <= interceptDistance + 2f)
             {
                 cinematicCamera.PlayCinematic(aIController.currentAICharacter.transform); //play slow motion
             }
@@ -276,7 +276,7 @@ public class Judge : MonoBehaviour
     }
 
     // 🔥 PUNTOS CON EFECTOS
-    private void AddPointToPlayer(string reason, Transform winner)
+    public void AddPointToPlayer(string reason, Transform winner)
     {
         if (roundEnded) return;
 
@@ -290,7 +290,7 @@ public class Judge : MonoBehaviour
             OnEffectComplete();
     }
 
-    private void AddPointToIA(string reason, Transform winner)
+    public void AddPointToIA(string reason, Transform winner)
     {
         if (roundEnded) return;
 

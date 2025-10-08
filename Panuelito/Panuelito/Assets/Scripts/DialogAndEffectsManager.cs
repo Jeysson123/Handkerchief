@@ -291,6 +291,8 @@ public class DialogAndEffectsManager : MonoBehaviour
 
         dialogResult.SetActive(false);
         textResult.gameObject.SetActive(false);
+        playerMovement.hkTaked = false;
+        aiController.randomLine = Random.Range(0, 2); //update for set IA pass line or not
 
         isPlayingEffect = false;
         onComplete?.Invoke();

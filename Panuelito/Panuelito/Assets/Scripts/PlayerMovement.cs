@@ -34,6 +34,7 @@ public class PlayerMovement : MonoBehaviour, IPointerDownHandler, IPointerUpHand
     private HandkerchiefSpawner spawner;
     private Judge judge;
     private DialogAndEffectsManager dialogAndEffectsManager;
+    private AIController aiController;
     public GameObject currentCharacter;
     private Animator currentAnimator;
 
@@ -45,7 +46,7 @@ public class PlayerMovement : MonoBehaviour, IPointerDownHandler, IPointerUpHand
     private float fintTimer = 0f;
 
     private CinematicCameraController cinematicCamera;
-
+    public bool hkTaked;
 
     void Start()
     {
@@ -54,6 +55,7 @@ public class PlayerMovement : MonoBehaviour, IPointerDownHandler, IPointerUpHand
         judge = FindObjectOfType<Judge>();
         dialogAndEffectsManager = FindObjectOfType<DialogAndEffectsManager>();
         cinematicCamera = FindObjectOfType<CinematicCameraController>();
+        aiController = FindObjectOfType<AIController>();
 
         // Listeners para selección (SelectCharacter verifica el spawner internamente)
         if (button1 != null) button1.onClick.AddListener(() => SelectCharacter(0));
@@ -97,6 +99,25 @@ public class PlayerMovement : MonoBehaviour, IPointerDownHandler, IPointerUpHand
     void Update()
     {
         if (currentCharacter == null || joystick == null) return;
+
+        if (!hkTaked && !aiController.returningToBase)
+        {
+            //pass line without take HK
+            if(currentCharacter.transform.position.z > -15.6)
+            {
+                judge.AddPointToIA($"Jugador cruzo linea sin panuelo, → punto IA +1.", aiController.currentAICharacter.transform);
+
+            }
+        }
+        else if(hkTaked) 
+        {
+            //pass line now with HK to enemy base
+            if (currentCharacter.transform.position.z > -15.6)
+            {
+                judge.AddPointToIA($"Jugador cruzo linea con panuelo hacia base equivocada, → punto IA +1.", aiController.currentAICharacter.transform);
+
+            }
+        }
 
         // Obtener forward de cámara de forma segura
         Vector3 camForward;
@@ -250,6 +271,7 @@ public class PlayerMovement : MonoBehaviour, IPointerDownHandler, IPointerUpHand
             hk.transform.localRotation = Quaternion.identity;
 
             cinematicCamera.PlayCinematic(currentCharacter.transform); //play slow motion
+            hkTaked = true;
 
         }
         else

@@ -23,14 +23,21 @@ public class AIController : MonoBehaviour
     private float speedFactor;
 
     private bool isActing = false;
-    private bool returningToBase = false;
+    public bool returningToBase = false;
     private Vector3 aiOriginalPos;
     private CinematicCameraController cinematicCamera;
     public bool playSlowMotion = true;
+    private PlayerMovement playerMovement;
+    private Judge judge;
+    public int randomLine;
 
     void Start()
     {
         cinematicCamera = FindObjectOfType<CinematicCameraController>();
+        playerMovement = FindObjectOfType<PlayerMovement>();
+        judge = FindObjectOfType<Judge>();
+        randomLine = Random.Range(0, 2);
+
         if (spawner == null)
             spawner = FindObjectOfType<HandkerchiefSpawner>();
     }
@@ -72,6 +79,25 @@ public class AIController : MonoBehaviour
     {
         if (currentAICharacter == null || spawner.Handkerchief == null) return;
 
+        if (!returningToBase && !playerMovement.hkTaked)
+        {
+            //pass line without take HK
+            if (currentAICharacter.transform.position.z < -15.6)
+            {
+                judge.AddPointToPlayer($"IA cruzo linea sin panuelo, → punto JUGADOR +1.", playerMovement.currentCharacter.transform);
+
+            }
+        }
+        else if (returningToBase)
+        {
+            //pass line now with HK to enemy base
+            if (currentAICharacter.transform.position.z < -15.6)
+            {
+                judge.AddPointToPlayer($"IA cruzo linea con panuelo hacia base equivocada, → punto JUGADOR +1.", playerMovement.currentCharacter.transform);
+
+            }
+        }
+
         Vector3 targetPos;
 
         if (returningToBase)
@@ -94,6 +120,11 @@ public class AIController : MonoBehaviour
             if (handkerchiefAvailable)
             {
                 targetPos = spawner.Handkerchief.transform.position; // pañuelo disponible
+                //ramdon logic go to HK or pass line
+                if (randomLine > 0)
+                {
+                    targetPos.z -= 20;
+                }
             }
             else
             {
