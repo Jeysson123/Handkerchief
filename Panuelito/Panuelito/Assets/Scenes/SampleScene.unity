@@ -4035,6 +4035,7 @@ GameObject:
   - component: {fileID: 504965975}
   - component: {fileID: 504965976}
   - component: {fileID: 504965977}
+  - component: {fileID: 504965978}
   m_Layer: 0
   m_Name: Spawner
   m_TagString: Untagged
@@ -4128,6 +4129,7 @@ MonoBehaviour:
   takeDistance: 2
   currentSpeed: 0
   currentCharacter: {fileID: 0}
+  hkTaked: 0
 --- !u!114 &504965976
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4229,6 +4231,24 @@ MonoBehaviour:
   textNumber: {fileID: 3579782}
   dialogResult: {fileID: 451860386}
   textResult: {fileID: 775137838}
+--- !u!114 &504965978
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 504965971}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ffe340a11b3c718429dc3ba8ef05ded6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  backgroundMusic: {fileID: 8300000, guid: 5bc6a620d60014940af6134c6a6f5a75, type: 3}
+  takeFintSound: {fileID: 8300000, guid: b505a9d1de2ad2f41aa6eeff29a57687, type: 3}
+  speedSound: {fileID: 8300000, guid: 1e35a30ddc6c6b04ea374d1203f06e6e, type: 3}
+  winSound: {fileID: 8300000, guid: f5e06dae1470e014493dbf2a23497617, type: 3}
+  loseSound: {fileID: 8300000, guid: 643f1b2d9c55ac649926b919ae630863, type: 3}
+  chooseSound: {fileID: 8300000, guid: 1e8d3e0eb61dc174ab2324e4eaeb9ee2, type: 3}
 --- !u!1001 &512490114
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -12237,6 +12257,9 @@ MonoBehaviour:
   actionCooldownMin: 0.5
   actionCooldownMax: 2
   currentAICharacter: {fileID: 0}
+  returningToBase: 0
+  playSlowMotion: 1
+  randomLine: 0
 --- !u!1 &1692214476
 GameObject:
   m_ObjectHideFlags: 0

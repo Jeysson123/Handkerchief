@@ -37,6 +37,7 @@ public class Judge : MonoBehaviour
 
     private List<GameObject> hiddenPlayers = new List<GameObject>();
     private CinematicCameraController cinematicCamera;
+    private AudioManager audioManager;
 
     private void Start()
     {
@@ -45,6 +46,7 @@ public class Judge : MonoBehaviour
         aIController = FindObjectOfType<AIController>();
         effectsManager = FindObjectOfType<DialogAndEffectsManager>();
         cinematicCamera = FindObjectOfType<CinematicCameraController>();
+        audioManager = FindObjectOfType<AudioManager>();
 
         if (spawner != null)
         {
@@ -65,6 +67,7 @@ public class Judge : MonoBehaviour
         {
             Transform iatransform = aIController.currentAICharacter.transform;
             AddPointToIA("Jugador selecciono , index equivocado → punto IA +1.", iatransform);
+            audioManager.PlayLoseSound();
         }
     }
 
@@ -138,6 +141,7 @@ public class Judge : MonoBehaviour
                 HideOtherPlayers(nearestA.transform);
                 cinematicCamera.PlayCinematic(playerMovement.currentCharacter.transform); //play slow motion
                 AddPointToPlayer($"Jugador ({nearestA.name}) interceptó a la IA, → punto JUGADOR +1.", nearestA.transform);
+                audioManager.PlayWinSound();
                 return;
             }
 
@@ -148,6 +152,7 @@ public class Judge : MonoBehaviour
                 {
                     HideOtherPlayers(iatransform);
                     AddPointToIA("IA cruzó la línea de puntuación → punto IA +1.", iatransform);
+                    audioManager.PlayLoseSound();
                     return;
                 }
             }
@@ -157,9 +162,17 @@ public class Judge : MonoBehaviour
                 Transform winner = lastTouched == Team.AI || lastTouched == Team.None ? holder : FindNearestInListWithDistance(holder.position, spawner.teamAPlayers, out _).transform;
                 HideOtherPlayers(winner);
                 if (lastTouched == Team.AI || lastTouched == Team.None)
+                {
                     AddPointToIA("IA llegó a su base con el pañuelo, → punto IA +1.", winner);
+                    audioManager.PlayLoseSound();
+                }
+
                 else
+                {
                     AddPointToPlayer("Jugador tocó el pañuelo antes de que la IA llegara a su base. → punto JUGADOR +1.", winner);
+                    audioManager.PlayWinSound();
+                }                  
+
                 return;
             }
         }
@@ -178,6 +191,7 @@ public class Judge : MonoBehaviour
                 aIController.MoveRightArm();
                 HideOtherPlayers(nearestB.transform);
                 AddPointToIA($"IA ({nearestB.name}) interceptó al jugador, → punto IA +1.", nearestB.transform);
+                audioManager.PlayLoseSound();
                 return;
             }
 
@@ -188,6 +202,7 @@ public class Judge : MonoBehaviour
                 {
                     HideOtherPlayers(playerTransform);
                     AddPointToPlayer("Jugador cruzó la línea de puntuación → punto JUGADOR +1.", playerTransform);
+                    audioManager.PlayWinSound();
                     return;
                 }
             }
@@ -196,6 +211,7 @@ public class Judge : MonoBehaviour
             {
                 HideOtherPlayers(holder);
                 AddPointToPlayer("Jugador llegó a su base con el pañuelo, → punto JUGADOR +1.", holder);
+                audioManager.PlayWinSound();
                 return;
             }
         }

@@ -47,6 +47,7 @@ public class PlayerMovement : MonoBehaviour, IPointerDownHandler, IPointerUpHand
 
     private CinematicCameraController cinematicCamera;
     public bool hkTaked;
+    private AudioManager audioManager;
 
     void Start()
     {
@@ -56,6 +57,7 @@ public class PlayerMovement : MonoBehaviour, IPointerDownHandler, IPointerUpHand
         dialogAndEffectsManager = FindObjectOfType<DialogAndEffectsManager>();
         cinematicCamera = FindObjectOfType<CinematicCameraController>();
         aiController = FindObjectOfType<AIController>();
+        audioManager = FindObjectOfType<AudioManager>();
 
         // Listeners para selección (SelectCharacter verifica el spawner internamente)
         if (button1 != null) button1.onClick.AddListener(() => SelectCharacter(0));
@@ -103,19 +105,19 @@ public class PlayerMovement : MonoBehaviour, IPointerDownHandler, IPointerUpHand
         if (!hkTaked && !aiController.returningToBase)
         {
             //pass line without take HK
-            if(currentCharacter.transform.position.z > -15.6)
+            if (currentCharacter.transform.position.z > -15.6)
             {
                 judge.AddPointToIA($"Jugador cruzo linea sin panuelo, → punto IA +1.", aiController.currentAICharacter.transform);
-
+                audioManager.PlayLoseSound();
             }
         }
-        else if(hkTaked) 
+        else if (hkTaked)
         {
             //pass line now with HK to enemy base
             if (currentCharacter.transform.position.z > -15.6)
             {
                 judge.AddPointToIA($"Jugador cruzo linea con panuelo hacia base equivocada, → punto IA +1.", aiController.currentAICharacter.transform);
-
+                audioManager.PlayLoseSound();
             }
         }
 
@@ -188,7 +190,7 @@ public class PlayerMovement : MonoBehaviour, IPointerDownHandler, IPointerUpHand
 
     private void SelectCharacter(int index)
     {
-
+        audioManager.PlayChooseSound();
         //IA call
         AIController ai = FindObjectOfType<AIController>();
 
@@ -218,12 +220,14 @@ public class PlayerMovement : MonoBehaviour, IPointerDownHandler, IPointerUpHand
 
             CameraFollow cam = Camera.main != null ? Camera.main.GetComponent<CameraFollow>() : null;
             if (cam != null) cam.SetTarget(currentCharacter.transform);
-          
+
         }
     }
 
     public void MoveRightArm()
     {
+        audioManager.PlayTakeFintSound();
+
         if (rightArm == null) return;
 
         finting = true;
@@ -241,6 +245,8 @@ public class PlayerMovement : MonoBehaviour, IPointerDownHandler, IPointerUpHand
 
     private void TakeHandkerchief()
     {
+        audioManager.PlayTakeFintSound();
+
         GameObject hk = (spawner != null) ? spawner.Handkerchief : null;
         Vector3 originalPos = (spawner != null) ? spawner.OriginalHandkerchiefPos : Vector3.zero;
 
@@ -272,11 +278,8 @@ public class PlayerMovement : MonoBehaviour, IPointerDownHandler, IPointerUpHand
 
             cinematicCamera.PlayCinematic(currentCharacter.transform); //play slow motion
             hkTaked = true;
+        }
 
-        }
-        else
-        {
-        }
     }
 
 
@@ -298,6 +301,10 @@ public class PlayerMovement : MonoBehaviour, IPointerDownHandler, IPointerUpHand
         speedFill.color = newColor;
     }
 
-    public void OnPointerDown(PointerEventData eventData) => isSpeedButtonPressed = true;
+    public void OnPointerDown(PointerEventData eventData)
+    {
+        isSpeedButtonPressed = true;
+        audioManager.PlaySpeedSound(); // 🔊 Solo suena una vez al presionar
+    }
     public void OnPointerUp(PointerEventData eventData) => isSpeedButtonPressed = false;
 }

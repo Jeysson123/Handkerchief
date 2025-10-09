@@ -30,6 +30,7 @@ public class AIController : MonoBehaviour
     private PlayerMovement playerMovement;
     private Judge judge;
     public int randomLine;
+    private AudioManager audioManager;
 
     void Start()
     {
@@ -37,6 +38,7 @@ public class AIController : MonoBehaviour
         playerMovement = FindObjectOfType<PlayerMovement>();
         judge = FindObjectOfType<Judge>();
         randomLine = Random.Range(0, 2);
+        audioManager = FindObjectOfType<AudioManager>();
 
         if (spawner == null)
             spawner = FindObjectOfType<HandkerchiefSpawner>();
@@ -85,6 +87,7 @@ public class AIController : MonoBehaviour
             if (currentAICharacter.transform.position.z < -15.6)
             {
                 judge.AddPointToPlayer($"IA cruzo linea sin panuelo, → punto JUGADOR +1.", playerMovement.currentCharacter.transform);
+                audioManager.PlayWinSound();
 
             }
         }
@@ -94,6 +97,7 @@ public class AIController : MonoBehaviour
             if (currentAICharacter.transform.position.z < -15.6)
             {
                 judge.AddPointToPlayer($"IA cruzo linea con panuelo hacia base equivocada, → punto JUGADOR +1.", playerMovement.currentCharacter.transform);
+                audioManager.PlayWinSound();
 
             }
         }
@@ -107,6 +111,7 @@ public class AIController : MonoBehaviour
             if (playSlowMotion)
             {
                 cinematicCamera.PlayCinematic(currentAICharacter.transform); //play slow motion
+                audioManager.PlayTakeFintSound();
                 playSlowMotion = false;
             }
 
