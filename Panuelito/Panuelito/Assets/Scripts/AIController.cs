@@ -71,9 +71,17 @@ public class AIController : MonoBehaviour
             aiOriginalPos = currentAICharacter.transform.position;
 
             // Aleatorizar velocidad
-            baseSpeed = 10f;
-            speedFactor = Random.Range(minSpeedFactor, maxSpeedFactor);
-            currentSpeed = baseSpeed * speedFactor;
+            
+            if (SettingsManager.Instance.DIFFICULT.Equals("Hard"))
+            {
+                currentSpeed = 20f;
+            }
+            else
+            {
+                baseSpeed = 10f;
+                speedFactor = Random.Range(minSpeedFactor, maxSpeedFactor);
+                currentSpeed = baseSpeed * speedFactor;
+            }          
         }
     }
 
@@ -81,27 +89,30 @@ public class AIController : MonoBehaviour
     {
         if (currentAICharacter == null || spawner.Handkerchief == null) return;
 
-        if (!returningToBase && !playerMovement.hkTaked)
+        if (SettingsManager.Instance.DIFFICULT.Equals("Hard"))
         {
-            //pass line without take HK
-            if (currentAICharacter.transform.position.z < -15.6)
+            if (!returningToBase && !playerMovement.hkTaked)
             {
-                judge.AddPointToPlayer($"IA cruzo linea sin panuelo, → punto JUGADOR +1.", playerMovement.currentCharacter.transform);
-                audioManager.PlayWinSound();
+                //pass line without take HK
+                if (currentAICharacter.transform.position.z < -15.6)
+                {
+                    judge.AddPointToPlayer($"IA cruzo linea sin panuelo, → punto JUGADOR +1.", playerMovement.currentCharacter.transform);
+                    audioManager.PlayWinSound();
 
+                }
+            }
+            else if (returningToBase)
+            {
+                //pass line now with HK to enemy base
+                if (currentAICharacter.transform.position.z < -15.6)
+                {
+                    judge.AddPointToPlayer($"IA cruzo linea con panuelo hacia base equivocada, → punto JUGADOR +1.", playerMovement.currentCharacter.transform);
+                    audioManager.PlayWinSound();
+
+                }
             }
         }
-        else if (returningToBase)
-        {
-            //pass line now with HK to enemy base
-            if (currentAICharacter.transform.position.z < -15.6)
-            {
-                judge.AddPointToPlayer($"IA cruzo linea con panuelo hacia base equivocada, → punto JUGADOR +1.", playerMovement.currentCharacter.transform);
-                audioManager.PlayWinSound();
-
-            }
-        }
-
+        
         Vector3 targetPos;
 
         if (returningToBase)
@@ -125,10 +136,14 @@ public class AIController : MonoBehaviour
             if (handkerchiefAvailable)
             {
                 targetPos = spawner.Handkerchief.transform.position; // pañuelo disponible
-                //ramdon logic go to HK or pass line
-                if (randomLine > 0)
+
+                if (SettingsManager.Instance.DIFFICULT.Equals("Hard"))
                 {
-                    targetPos.z -= 20;
+                    //ramdon logic go to HK or pass line
+                    if (randomLine > 0)
+                    {
+                        targetPos.z -= 20;
+                    }
                 }
             }
             else

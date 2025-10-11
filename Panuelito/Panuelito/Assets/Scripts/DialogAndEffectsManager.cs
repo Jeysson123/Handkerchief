@@ -83,21 +83,28 @@ public class DialogAndEffectsManager : MonoBehaviour
         StartCoroutine(ShowNumber());
     }
 
-    public void ShowVictoryEffect(Transform winner, string teamName, string reason, System.Action onComplete = null)
+    // ✅ Nuevo parámetro celebrateFullTeam
+    public void ShowVictoryEffect(Transform winner, string teamName, string reason, bool celebrateFullTeam = false, System.Action onComplete = null)
     {
+        if (celebrateFullTeam)
+        {
+            reason = teamName.Equals("IA") ? "Team IA Winners" : "Team PLAYER Winners";
+        }
+
         if (teamName.Equals("IA"))
         {
             aiController.playSlowMotion = true;
         }
+
         dialogResult.transform.position = new Vector3(winner.position.x - 15f, winner.position.y + 10f, winner.position.z);
         textResult.gameObject.transform.position = new Vector3(winner.position.x + 27f, winner.position.y - 12f, winner.position.z - 1);
         textResult.text = reason;
 
         if (isPlayingEffect || winner == null) return;
-        StartCoroutine(PlayEffectAndRestart(winner, teamName, onComplete));
+        StartCoroutine(PlayEffectAndRestart(winner, teamName, celebrateFullTeam, onComplete));
     }
 
-    private IEnumerator PlayEffectAndRestart(Transform winner, string teamName, System.Action onComplete)
+    private IEnumerator PlayEffectAndRestart(Transform winner, string teamName, bool celebrateFullTeam, System.Action onComplete)
     {
         isPlayingEffect = true;
         dialogResult.SetActive(true);
@@ -106,9 +113,9 @@ public class DialogAndEffectsManager : MonoBehaviour
         if (playerMovement != null) playerMovement.enabled = false;
         if (aiController != null) aiController.enabled = false;
 
-        // ✅ Ocultar todos los personajes menos el ganador
+        // ✅ Ocultar todos los personajes menos el ganador (solo si no celebran todo el equipo)
         List<GameObject> hiddenPlayers = new List<GameObject>();
-        if (spawner != null)
+        if (!celebrateFullTeam && spawner != null)
         {
             List<GameObject> allPlayers = new List<GameObject>();
             allPlayers.AddRange(spawner.teamAPlayers);
@@ -203,28 +210,59 @@ public class DialogAndEffectsManager : MonoBehaviour
             cameraFollow.pitch = targetPitch;
         }
 
-        // Animación y efectos de victoria
-        Animator animator = winner.GetComponent<Animator>();
-        if (animator != null && victoryStates != null && victoryStates.Length > 0)
+        // ✅ Animación y efectos de victoria
+        if (celebrateFullTeam && spawner != null)
         {
-            int index = Random.Range(0, victoryStates.Length);
-            string stateName = victoryStates[index];
-            animator.Play(stateName, 0, 0f);
-
-            if (victoryEffectPrefabs != null && victoryEffectPrefabs.Length > 0)
+            List<GameObject> teamPlayers = teamName == "Jugador" ? spawner.teamAPlayers : spawner.teamBPlayers;
+            foreach (var player in teamPlayers)
             {
-                int effectIndex = Random.Range(0, victoryEffectPrefabs.Length);
+                if (player != null)
+                {
+                    Animator animator = player.GetComponent<Animator>();
+                    if (animator != null && victoryStates != null && victoryStates.Length > 0)
+                    {
+                        int index = Random.Range(0, victoryStates.Length);
+                        string stateName = victoryStates[index];
+                        animator.Play(stateName, 0, 0f);
+                    }
 
-                // 🔥 Ajuste automático de altura basado en el collider del personaje
-                float characterHeight = 2f; // valor por defecto
-                Collider col = winner.GetComponent<Collider>();
-                if (col != null) characterHeight = col.bounds.size.y;
+                    // Efectos
+                    if (victoryEffectPrefabs != null && victoryEffectPrefabs.Length > 0)
+                    {
+                        int effectIndex = Random.Range(0, victoryEffectPrefabs.Length);
+                        float characterHeight = 2f;
+                        Collider col = player.GetComponent<Collider>();
+                        if (col != null) characterHeight = col.bounds.size.y;
 
-                Vector3 effectPos = winner.position + Vector3.up * (characterHeight * 0.9f + effectHeightOffset);
+                        Vector3 effectPos = player.transform.position + Vector3.up * (characterHeight * 0.9f + effectHeightOffset);
+                        GameObject effect = Instantiate(victoryEffectPrefabs[effectIndex], effectPos, player.transform.rotation);
+                        effect.transform.localScale *= effectScaleMultiplier;
+                        Destroy(effect, effectDuration);
+                    }
+                }
+            }
+        }
+        else
+        {
+            Animator animator = winner.GetComponent<Animator>();
+            if (animator != null && victoryStates != null && victoryStates.Length > 0)
+            {
+                int index = Random.Range(0, victoryStates.Length);
+                string stateName = victoryStates[index];
+                animator.Play(stateName, 0, 0f);
 
-                GameObject effect = Instantiate(victoryEffectPrefabs[effectIndex], effectPos, winner.rotation);
-                effect.transform.localScale *= effectScaleMultiplier;
-                Destroy(effect, effectDuration);
+                if (victoryEffectPrefabs != null && victoryEffectPrefabs.Length > 0)
+                {
+                    int effectIndex = Random.Range(0, victoryEffectPrefabs.Length);
+                    float characterHeight = 2f;
+                    Collider col = winner.GetComponent<Collider>();
+                    if (col != null) characterHeight = col.bounds.size.y;
+
+                    Vector3 effectPos = winner.position + Vector3.up * (characterHeight * 0.9f + effectHeightOffset);
+                    GameObject effect = Instantiate(victoryEffectPrefabs[effectIndex], effectPos, winner.rotation);
+                    effect.transform.localScale *= effectScaleMultiplier;
+                    Destroy(effect, effectDuration);
+                }
             }
         }
 
@@ -292,7 +330,7 @@ public class DialogAndEffectsManager : MonoBehaviour
         dialogResult.SetActive(false);
         textResult.gameObject.SetActive(false);
         playerMovement.hkTaked = false;
-        aiController.randomLine = Random.Range(0, 2); //update for set IA pass line or not
+        aiController.randomLine = Random.Range(0, 2);
 
         isPlayingEffect = false;
         onComplete?.Invoke();

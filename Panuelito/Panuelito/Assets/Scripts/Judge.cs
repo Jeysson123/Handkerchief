@@ -301,7 +301,9 @@ public class Judge : MonoBehaviour
         UpdateScoreUI();
 
         if (effectsManager != null)
-            effectsManager.ShowVictoryEffect(winner, "Jugador", reason, OnEffectComplete);
+        {
+            effectsManager.ShowVictoryEffect(winner, "Jugador", reason, playerScore == SettingsManager.Instance.POINTS_TO_WIN, OnEffectComplete);
+        }
         else
             OnEffectComplete();
     }
@@ -315,7 +317,9 @@ public class Judge : MonoBehaviour
         UpdateScoreUI();
 
         if (effectsManager != null)
-            effectsManager.ShowVictoryEffect(winner, "IA", reason, OnEffectComplete);
+        {
+            effectsManager.ShowVictoryEffect(winner, "IA", reason, aiScore == SettingsManager.Instance.POINTS_TO_WIN, OnEffectComplete);
+        }
         else
             OnEffectComplete();
     }
