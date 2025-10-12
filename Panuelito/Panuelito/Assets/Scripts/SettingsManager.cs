@@ -10,11 +10,19 @@ public class SettingsManager : MonoBehaviour
     public GameObject mainPanel;
     public GameObject settingsPanel;
 
-    [Header("UI References")]
+    [Header("UI Labels")]
+    public TextMeshProUGUI pointsValueLabel;
+    public TextMeshProUGUI difficultyValueLabel;
+    public TextMeshProUGUI mapValueLabel;
+    public TextMeshProUGUI soundValueLabel;
+    public TextMeshProUGUI languageValueLabel;
+
+    [Header("UI Texts")]
     public TextMeshProUGUI pointsValueText;
     public TextMeshProUGUI difficultyValueText;
     public TextMeshProUGUI mapValueText;
     public TextMeshProUGUI soundValueText;
+    public TextMeshProUGUI languageValueText;
 
     [Header("Buttons")]
     public Button pointsMinusButton;
@@ -25,24 +33,32 @@ public class SettingsManager : MonoBehaviour
     public Button mapNextButton;
     public Button soundMinusButton;
     public Button soundPlusButton;
+    public Button languageMinusButton;
+    public Button languagePlusButton;
     public Button saveButton;
 
     private int points;
     private int sound;
-    private string[] difficulties = { "Easy", "Normal", "Hard" };
+
+    private string[] difficulties;
     private int difficultyIndex;
-    private string[] maps = { "Parking", "Beach" };
+
+    private string[] maps;
     private int mapIndex;
 
-    // Variables públicas globales
+    private string[] languages = { "English", "Spanish" };
+    private int languageIndex;
+
+    // Public global variables
     public int POINTS_TO_WIN = 5;
-    public string DIFFICULT = "Hard";
-    public string CURRENT_MAP = "Beach";
+    public string DIFFICULT = "Easy";
+    public string CURRENT_MAP = "Parking";
     public int SOUND_LEVEL = 30; // 0 - 100
+    public string LANGUAGE = "Spanish";
 
     private void Awake()
     {
-        // Singleton
+        // Singleton pattern
         if (Instance != null && Instance != this)
         {
             Destroy(gameObject);
@@ -55,6 +71,8 @@ public class SettingsManager : MonoBehaviour
 
     private void Start()
     {
+        InitializeLanguageData();
+
         points = POINTS_TO_WIN;
         sound = SOUND_LEVEL;
 
@@ -64,10 +82,25 @@ public class SettingsManager : MonoBehaviour
         mapIndex = System.Array.IndexOf(maps, CURRENT_MAP);
         if (mapIndex < 0) mapIndex = 0;
 
+        languageIndex = System.Array.IndexOf(languages, LANGUAGE);
+        if (languageIndex < 0) languageIndex = 0;
+
         UpdateUI();
         AddListeners();
     }
 
+    private void InitializeLanguageData()
+    {
+        difficulties = LANGUAGE.Equals("Spanish")
+            ? new[] { "Facil", "Normal", "Dificil" }
+            : new[] { "Easy", "Normal", "Hard" };
+
+        maps = LANGUAGE.Equals("Spanish")
+            ? new[] { "Parqueo", "Playa" }
+            : new[] { "Parking", "Beach" };
+    }
+
+    // Add listeners to buttons
     private void AddListeners()
     {
         AddButtonListener(pointsMinusButton, () => ChangePoints(-1));
@@ -78,6 +111,8 @@ public class SettingsManager : MonoBehaviour
         AddButtonListener(mapNextButton, () => ChangeMap(1));
         AddButtonListener(soundMinusButton, () => ChangeSound(-5));
         AddButtonListener(soundPlusButton, () => ChangeSound(5));
+        AddButtonListener(languageMinusButton, () => ChangeLanguage(-1));
+        AddButtonListener(languagePlusButton, () => ChangeLanguage(1));
         AddButtonListener(saveButton, SaveSettings);
     }
 
@@ -87,9 +122,11 @@ public class SettingsManager : MonoBehaviour
             button.onClick.AddListener(action);
     }
 
+    // Change methods
     private void ChangePoints(int delta)
     {
-        points = Mathf.Clamp(points + delta, 0, 10);
+        // 🔹 Sin límite superior, solo evita que sea negativo
+        points = Mathf.Max(points + delta, 0);
         UpdateUI();
     }
 
@@ -111,23 +148,52 @@ public class SettingsManager : MonoBehaviour
         UpdateUI();
     }
 
+    private void ChangeLanguage(int delta)
+    {
+        languageIndex = (languageIndex + delta + languages.Length) % languages.Length;
+        LANGUAGE = languages[languageIndex];
+
+        InitializeLanguageData();
+        UpdateUI();
+    }
+
+    // Update UI
     private void UpdateUI()
     {
         if (pointsValueText != null) pointsValueText.text = points.ToString();
         if (difficultyValueText != null) difficultyValueText.text = difficulties[difficultyIndex];
         if (mapValueText != null) mapValueText.text = maps[mapIndex];
         if (soundValueText != null) soundValueText.text = sound + "%";
+        if (languageValueText != null) languageValueText.text = LANGUAGE;
 
         POINTS_TO_WIN = points;
         DIFFICULT = difficulties[difficultyIndex];
         CURRENT_MAP = maps[mapIndex];
         SOUND_LEVEL = sound;
+
+        UpdateUIByLanguage();
     }
 
+    private void UpdateUIByLanguage()
+    {
+        // Labels
+        pointsValueLabel.text = LANGUAGE.Equals("Spanish") ? "Puntos" : "Points";
+        difficultyValueLabel.text = LANGUAGE.Equals("Spanish") ? "Dificultad" : "Difficulty";
+        mapValueLabel.text = LANGUAGE.Equals("Spanish") ? "Mapa" : "Map";
+        soundValueLabel.text = LANGUAGE.Equals("Spanish") ? "Sonido" : "Sound";
+        languageValueLabel.text = LANGUAGE.Equals("Spanish") ? "Idioma" : "Language";
+
+        // Button text
+        TextMeshProUGUI buttonText = saveButton.GetComponentInChildren<TextMeshProUGUI>();
+        buttonText.text = LANGUAGE.Equals("Spanish") ? "Guardar" : "Save";
+    }
+
+    // Save settings
     private void SaveSettings()
     {
         mainPanel.SetActive(true);
         settingsPanel.SetActive(false);
-        Debug.Log($"💾 Settings saved: Points={points}, Difficulty={difficulties[difficultyIndex]}, Map={maps[mapIndex]}, Sound={sound}%");
+
+        Debug.Log($"💾 Settings saved: Points={points}, Difficulty={difficulties[difficultyIndex]}, Map={maps[mapIndex]}, Sound={sound}%, Language={LANGUAGE}");
     }
 }

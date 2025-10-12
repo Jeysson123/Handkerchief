@@ -10259,7 +10259,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'Player: '
+  m_text: Player
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 672d312f7e0ed154d8c068f4c0f79181, type: 2}
   m_sharedMaterial: {fileID: -2255870795105309551, guid: 672d312f7e0ed154d8c068f4c0f79181, type: 2}
@@ -12620,7 +12620,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'IA:'
+  m_text: IA
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 672d312f7e0ed154d8c068f4c0f79181, type: 2}
   m_sharedMaterial: {fileID: -2255870795105309551, guid: 672d312f7e0ed154d8c068f4c0f79181, type: 2}

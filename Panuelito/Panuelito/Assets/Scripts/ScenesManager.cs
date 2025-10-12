@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using TMPro;
 
 public class ScenesManager : MonoBehaviour
 {
@@ -45,6 +46,16 @@ public class ScenesManager : MonoBehaviour
         ShowMainMenu();
     }
 
+
+    private void Update()
+    {
+        TextMeshProUGUI textPlay = playButton.GetComponentInChildren<TextMeshProUGUI>();
+        textPlay.text = SettingsManager.Instance.LANGUAGE.Equals("Spanish") ? "Jugar" : "Play";
+
+        TextMeshProUGUI textSettings = settingsButton.GetComponentInChildren<TextMeshProUGUI>();
+        textSettings.text = SettingsManager.Instance.LANGUAGE.Equals("Spanish") ? "Configuraciones" : "Settings";
+    }
+
     public void ShowSettings()
     {
         if (mainPanel != null) mainPanel.SetActive(false);
@@ -59,11 +70,17 @@ public class ScenesManager : MonoBehaviour
 
     public void PlayGame()
     {
-      
-        if (SettingsManager.Instance.CURRENT_MAP.Equals("Parking")){
+        //PROESA 
+        if (SettingsManager.Instance.LANGUAGE.Equals("English")
+            && SettingsManager.Instance.CURRENT_MAP.Equals("Parking")
+            || SettingsManager.Instance.LANGUAGE.Equals("Spanish")
+          && SettingsManager.Instance.CURRENT_MAP.Equals("Parqueo"))
+        {
             SceneManager.LoadScene("ProesaScene");
             if (mainPanel != null) mainPanel.SetActive(false);
             if (settingsPanel != null) settingsPanel.SetActive(false);
         }
+
+        //PLAYA
     }
 }

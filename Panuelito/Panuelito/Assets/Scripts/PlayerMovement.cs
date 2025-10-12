@@ -65,7 +65,7 @@ public class PlayerMovement : MonoBehaviour, IPointerDownHandler, IPointerUpHand
         if (button3 != null) button3.onClick.AddListener(() => SelectCharacter(2));
 
         if (fintButton != null)
-            fintButton.onClick.AddListener(MoveRightArm);
+            fintButton.onClick.AddListener(HandleFint);
 
         if (takeButton != null)
             takeButton.onClick.AddListener(TakeHandkerchief);
@@ -107,7 +107,8 @@ public class PlayerMovement : MonoBehaviour, IPointerDownHandler, IPointerUpHand
             //pass line without take HK
             if (currentCharacter.transform.position.z > -15.6)
             {
-                judge.AddPointToIA($"Jugador cruzo linea sin panuelo, → punto IA +1.", aiController.currentAICharacter.transform);
+                judge.AddPointToIA(SettingsManager.Instance.LANGUAGE.Equals("English") ? "Player crossed the line without a handkerchief, → point IA +1."
+                    : $"Jugador cruzo linea sin panuelo, → punto IA +1.", aiController.currentAICharacter.transform);
                 audioManager.PlayLoseSound();
             }
         }
@@ -116,7 +117,8 @@ public class PlayerMovement : MonoBehaviour, IPointerDownHandler, IPointerUpHand
             //pass line now with HK to enemy base
             if (currentCharacter.transform.position.z > -15.6)
             {
-                judge.AddPointToIA($"Jugador cruzo linea con panuelo hacia base equivocada, → punto IA +1.", aiController.currentAICharacter.transform);
+                judge.AddPointToIA(SettingsManager.Instance.LANGUAGE.Equals("English") ? "Player crossed the line with a handkerchief towards the wrong base, → point IA +1."
+                    : $"Jugador cruzo linea con panuelo hacia base equivocada, → punto IA +1.", aiController.currentAICharacter.transform);
                 audioManager.PlayLoseSound();
             }
         }
@@ -175,6 +177,12 @@ public class PlayerMovement : MonoBehaviour, IPointerDownHandler, IPointerUpHand
                 finting = false;
             }
         }
+    }
+
+    public void HandleFint()
+    {
+        MoveRightArm();
+        aiController.IAReaction();
     }
 
     private void HandleSpeed()

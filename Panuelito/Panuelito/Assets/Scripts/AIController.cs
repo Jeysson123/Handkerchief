@@ -71,8 +71,9 @@ public class AIController : MonoBehaviour
             aiOriginalPos = currentAICharacter.transform.position;
 
             // Aleatorizar velocidad
-            
-            if (SettingsManager.Instance.DIFFICULT.Equals("Hard"))
+
+            if ((SettingsManager.Instance.LANGUAGE.Equals("English") && SettingsManager.Instance.DIFFICULT.Equals("Hard"))
+                 || (SettingsManager.Instance.LANGUAGE.Equals("Spanish") && SettingsManager.Instance.DIFFICULT.Equals("Dificil")))
             {
                 currentSpeed = 20f;
             }
@@ -81,7 +82,7 @@ public class AIController : MonoBehaviour
                 baseSpeed = 10f;
                 speedFactor = Random.Range(minSpeedFactor, maxSpeedFactor);
                 currentSpeed = baseSpeed * speedFactor;
-            }          
+            }
         }
     }
 
@@ -89,7 +90,8 @@ public class AIController : MonoBehaviour
     {
         if (currentAICharacter == null || spawner.Handkerchief == null) return;
 
-        if (SettingsManager.Instance.DIFFICULT.Equals("Hard"))
+        if ((SettingsManager.Instance.LANGUAGE.Equals("English") && !SettingsManager.Instance.DIFFICULT.Equals("Hard"))
+               || (SettingsManager.Instance.LANGUAGE.Equals("Spanish") && !SettingsManager.Instance.DIFFICULT.Equals("Dificil")))
         {
             if (!returningToBase && !playerMovement.hkTaked)
             {
@@ -112,7 +114,7 @@ public class AIController : MonoBehaviour
                 }
             }
         }
-        
+
         Vector3 targetPos;
 
         if (returningToBase)
@@ -137,7 +139,8 @@ public class AIController : MonoBehaviour
             {
                 targetPos = spawner.Handkerchief.transform.position; // pañuelo disponible
 
-                if (SettingsManager.Instance.DIFFICULT.Equals("Hard"))
+                if ((SettingsManager.Instance.LANGUAGE.Equals("English") && !SettingsManager.Instance.DIFFICULT.Equals("Hard"))
+                || (SettingsManager.Instance.LANGUAGE.Equals("Spanish") && !SettingsManager.Instance.DIFFICULT.Equals("Dificil")))
                 {
                     //ramdon logic go to HK or pass line
                     if (randomLine > 0)
@@ -184,6 +187,36 @@ public class AIController : MonoBehaviour
                 currentAnimator.SetFloat("speed", 0f);
         }
     }
+
+    public void IAReaction() {
+
+        Vector3 playerPosFlat = new Vector3(currentAICharacter.transform.position.x, 0, currentAICharacter.transform.position.z);
+        Vector3 hkPosFlat = new Vector3(spawner.Handkerchief.transform.position.x, 0, spawner.Handkerchief.transform.position.z);
+        float distXZ = Vector3.Distance(playerPosFlat, hkPosFlat);
+        float xzTolerance = 5f;
+
+
+        if (!returningToBase && distXZ <= xzTolerance && Vector3.Distance(spawner.Handkerchief.transform.position, spawner.OriginalHandkerchiefPos) < 0.2f)
+        {
+            Vector3 targetPos = spawner.Handkerchief.transform.position; // pañuelo disponible
+
+            if ((SettingsManager.Instance.LANGUAGE.Equals("English") && !SettingsManager.Instance.DIFFICULT.Equals("Hard"))
+                || (SettingsManager.Instance.LANGUAGE.Equals("Spanish") && !SettingsManager.Instance.DIFFICULT.Equals("Dificil")))
+            {
+                //REACTION to player FINT: Take, pass line , fint
+                int randomLineTemp = Random.Range(0, 2);
+
+                if (randomLineTemp > 0)
+                {
+                    targetPos.z -= 20;
+                }
+                else
+                {
+                    StartCoroutine(PerformRandomAction());
+                }
+            }
+        }
+     }
 
     private IEnumerator PerformRandomAction()
     {

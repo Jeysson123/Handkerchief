@@ -88,7 +88,9 @@ public class DialogAndEffectsManager : MonoBehaviour
     {
         if (celebrateFullTeam)
         {
-            reason = teamName.Equals("IA") ? "Team IA Winners" : "Team PLAYER Winners";
+            reason = teamName.Equals("IA") ? (SettingsManager.Instance.LANGUAGE.Equals("English") 
+                ? "Team IA Winners"  : "Equipo IA ganadores")
+                : (SettingsManager.Instance.LANGUAGE.Equals("English")  ?  "Team PLAYER Winners" : "Equipo JUGADOR Ganadores");
         }
 
         if (teamName.Equals("IA"))
