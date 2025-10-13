@@ -66,7 +66,7 @@ public class Judge : MonoBehaviour
         if (indexFormated != rightIndex)
         {
             Transform iatransform = aIController.currentAICharacter.transform;
-            AddPointToIA(SettingsManager.Instance.LANGUAGE.Equals("English") ? "Player selected, wrong index → ​​AI point +1."
+            AddPointToIA(SettingsManager.Instance.LANGUAGE.Equals("English") ? "Player selected, wrong index → AI point +1."
                 : "Jugador selecciono , index equivocado → punto IA +1.", iatransform);
             audioManager.PlayLoseSound();
         }
@@ -133,14 +133,14 @@ public class Judge : MonoBehaviour
             GameObject nearestA = FindNearestInListWithDistance(holder.position, spawner.teamAPlayers, out float nearestADist);
             if (nearestA != null && nearestADist <= interceptDistance + 2f)
             {
-                cinematicCamera.PlayCinematic(playerMovement.currentCharacter.transform); //play slow motion
+                cinematicCamera.PlayCinematic(playerMovement.currentCharacter.transform);
             }
 
             if (nearestA != null && nearestADist <= interceptDistance)
             {
                 playerMovement.MoveRightArm();
                 HideOtherPlayers(nearestA.transform);
-                cinematicCamera.PlayCinematic(playerMovement.currentCharacter.transform); //play slow motion
+                cinematicCamera.PlayCinematic(playerMovement.currentCharacter.transform);
                 AddPointToPlayer(SettingsManager.Instance.LANGUAGE.Equals("English") ? $"Player ({nearestA.name}) intercepted the AI, → point PLAYER +1."
                     : $"Jugador ({nearestA.name}) interceptó a la IA, → punto JUGADOR +1.", nearestA.transform);
                 audioManager.PlayWinSound();
@@ -153,7 +153,7 @@ public class Judge : MonoBehaviour
                 if (iatransform.position.z >= 112.12)
                 {
                     HideOtherPlayers(iatransform);
-                    AddPointToIA(SettingsManager.Instance.LANGUAGE.Equals("English")  ? "IA crossed the score line → point IA +1"
+                    AddPointToIA(SettingsManager.Instance.LANGUAGE.Equals("English") ? "IA crossed the score line → point IA +1"
                         : "IA cruzó la línea de puntuación → punto IA +1.", iatransform);
                     audioManager.PlayLoseSound();
                     return;
@@ -166,18 +166,16 @@ public class Judge : MonoBehaviour
                 HideOtherPlayers(winner);
                 if (lastTouched == Team.AI || lastTouched == Team.None)
                 {
-                    AddPointToIA(SettingsManager.Instance.LANGUAGE.Equals("English") ? "AI reached its base with the handkerchief, → AI point +1.\""
+                    AddPointToIA(SettingsManager.Instance.LANGUAGE.Equals("English") ? "AI reached its base with the handkerchief, → AI point +1."
                         : "IA llegó a su base con el pañuelo, → punto IA +1.", winner);
                     audioManager.PlayLoseSound();
                 }
-
                 else
                 {
-                    AddPointToPlayer(SettingsManager.Instance.LANGUAGE.Equals("English")  ? "Player touched the handkerchief before the AI ​​reached its base. → PLAYER point +1."
+                    AddPointToPlayer(SettingsManager.Instance.LANGUAGE.Equals("English") ? "Player touched the handkerchief before the AI ​​reached its base. → PLAYER point +1."
                         : "Jugador tocó el pañuelo antes de que la IA llegara a su base. → punto JUGADOR +1.", winner);
                     audioManager.PlayWinSound();
-                }                  
-
+                }
                 return;
             }
         }
@@ -188,14 +186,14 @@ public class Judge : MonoBehaviour
 
             if (nearestB != null && nearestBDist <= interceptDistance + 2f)
             {
-                cinematicCamera.PlayCinematic(aIController.currentAICharacter.transform); //play slow motion
+                cinematicCamera.PlayCinematic(aIController.currentAICharacter.transform);
             }
 
             if (nearestB != null && nearestBDist <= interceptDistance)
             {
                 aIController.MoveRightArm();
                 HideOtherPlayers(nearestB.transform);
-                AddPointToIA(SettingsManager.Instance.LANGUAGE.Equals("English")  ? $"AI ({nearestB.name}) intercepted the player, → AI point +1.\""
+                AddPointToIA(SettingsManager.Instance.LANGUAGE.Equals("English") ? $"AI ({nearestB.name}) intercepted the player, → AI point +1."
                     : $"IA ({nearestB.name}) interceptó al jugador, → punto IA +1.", nearestB.transform);
                 audioManager.PlayLoseSound();
                 return;
@@ -314,6 +312,9 @@ public class Judge : MonoBehaviour
         }
         else
             OnEffectComplete();
+
+        if (GameCacheManager.Instance != null && spawner != null)
+            GameCacheManager.Instance.SaveGame(this, spawner);
     }
 
     public void AddPointToIA(string reason, Transform winner)
@@ -330,6 +331,9 @@ public class Judge : MonoBehaviour
         }
         else
             OnEffectComplete();
+
+        if (GameCacheManager.Instance != null && spawner != null)
+            GameCacheManager.Instance.SaveGame(this, spawner);
     }
 
     private void OnEffectComplete()
@@ -351,7 +355,6 @@ public class Judge : MonoBehaviour
         progressTowardsBase.Clear();
     }
 
-    // 🔄 Reactivar juego después del respawn
     public void ReinitializeAfterRespawn()
     {
         originalPosByTransform.Clear();
@@ -380,5 +383,15 @@ public class Judge : MonoBehaviour
             playerScoreText.text = $"{labelPlayer} : {playerScore}";
         if (aiScoreText != null)
             aiScoreText.text = $"{labelIA} : {aiScore}";
+    }
+
+    // ✅ MÉTODOS PARA GameCacheManager
+    public int GetPlayerScore() => playerScore;
+    public int GetAIScore() => aiScore;
+    public void SetScores(int player, int ai)
+    {
+        playerScore = player;
+        aiScore = ai;
+        UpdateScoreUI();
     }
 }

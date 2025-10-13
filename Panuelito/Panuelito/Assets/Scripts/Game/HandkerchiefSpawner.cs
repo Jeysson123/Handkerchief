@@ -50,13 +50,13 @@ public class HandkerchiefSpawner : MonoBehaviour
     private PlayerMovement playerMovement;
     private DialogAndEffectsManager dialogAndEffectsManager;
 
-    // 🔹 Variables para controlar los personajes iniciales
     private List<GameObject> fixedTeamAPrefabs = new List<GameObject>();
     private List<GameObject> fixedTeamBPrefabs = new List<GameObject>();
     private bool firstSpawnDone = false;
-
-    // 🔹 Contador de respawns
     private int respawnCount = 0;
+
+    // 🟢 Nueva bandera: solo restaurar una vez
+    private bool hasRestoredOnce = false;
 
     void Start()
     {
@@ -75,17 +75,38 @@ public class HandkerchiefSpawner : MonoBehaviour
         if (speedSlider != null)
             originalSpeedValue = speedSlider.value;
 
-        SpawnAll();
+        // 🟢 Restaurar solo una vez al inicio
+        if (GameCacheManager.Instance != null && GameCacheManager.Instance.HasSavedGame() && !hasRestoredOnce)
+        {
+            Debug.Log("♻️ Restaurando partida desde caché...");
+            hasRestoredOnce = true;
+            RestoreFromCache();
+        }
+        else
+        {
+            Debug.Log("🆕 No hay partida previa. Generando nueva...");
+            SpawnAll();
+            SaveInitialCache();
+        }
     }
 
-    public void SpawnAll()
+    private void SaveInitialCache()
+    {
+        if (GameCacheManager.Instance != null)
+        {
+            var judge = FindObjectOfType<Judge>();
+            if (judge != null)
+                GameCacheManager.Instance.SaveGame(judge, this);
+        }
+    }
+
+    public void SpawnAll(bool restoringFromCache = false)
     {
         dialogAndEffectsManager.StartShowNumber();
 
         if (allPrefabs == null || centerPrefab == null || handkerchiefPrefab == null) return;
         if (allPrefabs.Length < playersPerTeam * 2) return;
 
-        // 🔹 Eliminar los jugadores anteriores si existen
         foreach (var go in teamAPlayers) Destroy(go);
         foreach (var go in teamBPlayers) Destroy(go);
         teamAPlayers.Clear();
@@ -93,9 +114,7 @@ public class HandkerchiefSpawner : MonoBehaviour
 
         respawnCount++;
 
-        // 🔹 Si es el primer spawn → elige personajes aleatorios
-        // 🔹 Si es el segundo o más → usa los mismos que se guardaron en el primero
-        if (respawnCount == 1)
+        if (respawnCount == 1 && !restoringFromCache)
         {
             List<GameObject> available = new List<GameObject>(allPrefabs);
             fixedTeamAPrefabs = ChooseFixedPrefabs(available, playersPerTeam);
@@ -106,7 +125,6 @@ public class HandkerchiefSpawner : MonoBehaviour
         SpawnTeam(teamAPosition, fixedTeamAPrefabs, "Team A");
         SpawnTeam(teamBPosition, fixedTeamBPrefabs, "Team B");
 
-        // Centro y pañuelo
         GameObject center = Instantiate(centerPrefab, centerPosition, Quaternion.identity);
         center.transform.localScale = Vector3.one * scale;
 
@@ -115,14 +133,12 @@ public class HandkerchiefSpawner : MonoBehaviour
         Quaternion rot = Quaternion.LookRotation(Vector3.Cross(dirToA, Vector3.up), Vector3.up);
         center.transform.rotation = rot;
 
-        // Crear el pañuelo
         Vector3 hkPosition = new Vector3(-26.75f, 6.48f, -15.14f);
         Quaternion hkRotation = Quaternion.Euler(87.688f, 51.121f, -128.9f);
         hk = Instantiate(handkerchiefPrefab, hkPosition, hkRotation);
         hk.transform.localScale = new Vector3(15f, 15f, 15f);
         OriginalHandkerchiefPos = hk.transform.position;
 
-        // Restaurar cámara y velocidad
         if (mainCamera != null)
         {
             mainCamera.transform.position = cameraStartPos;
@@ -134,9 +150,16 @@ public class HandkerchiefSpawner : MonoBehaviour
 
         EnableSelectionButtons(true);
         playerMovement.currentSpeed = 0f;
+
+        // Guardar progreso solo si no es restauración
+        if (!restoringFromCache && GameCacheManager.Instance != null)
+        {
+            var judge = FindObjectOfType<Judge>();
+            if (judge != null)
+                GameCacheManager.Instance.SaveGame(judge, this);
+        }
     }
 
-    // 🔹 Método auxiliar para elegir los personajes iniciales
     private List<GameObject> ChooseFixedPrefabs(List<GameObject> available, int count)
     {
         List<GameObject> chosen = new List<GameObject>();
@@ -219,5 +242,51 @@ public class HandkerchiefSpawner : MonoBehaviour
             if (btn != null)
                 btn.interactable = enabled;
         }
+    }
+
+    // 🟢 Restaurar desde caché (solo al inicio)
+    public void RestoreFromCache()
+    {
+        var cache = GameCacheManager.Instance;
+        if (cache == null || !cache.HasSavedGame()) return;
+
+        var data = cache.LoadGame();
+        if (data == null) return;
+
+        fixedTeamAPrefabs.Clear();
+        fixedTeamBPrefabs.Clear();
+
+        foreach (var name in data.teamA)
+        {
+            var prefab = FindPrefabByName(name);
+            if (prefab != null) fixedTeamAPrefabs.Add(prefab);
+        }
+
+        foreach (var name in data.teamB)
+        {
+            var prefab = FindPrefabByName(name);
+            if (prefab != null) fixedTeamBPrefabs.Add(prefab);
+        }
+
+        SettingsManager.Instance.DIFFICULT = data.difficulty;
+        SettingsManager.Instance.CURRENT_MAP = data.map;
+        SettingsManager.Instance.POINTS_TO_WIN = data.pointsToWin;
+        SettingsManager.Instance.LANGUAGE = data.language;
+
+        SpawnAll(true);
+
+        var judge = FindObjectOfType<Judge>();
+        if (judge != null)
+        {
+            judge.SetScores(data.playerScore, data.aiScore);
+            Debug.Log($"✅ Partida restaurada → Jugador:{data.playerScore} | IA:{data.aiScore}");
+        }
+    }
+
+    private GameObject FindPrefabByName(string name)
+    {
+        foreach (var p in allPrefabs)
+            if (p.name == name) return p;
+        return null;
     }
 }
