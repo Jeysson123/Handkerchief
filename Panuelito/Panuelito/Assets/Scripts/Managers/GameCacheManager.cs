@@ -12,6 +12,7 @@ public class GameCacheManager : MonoBehaviour
         public int aiScore;
         public string difficulty;
         public string map;
+        public int sound;
         public int pointsToWin;
         public string language;
         public List<string> teamA;
@@ -40,21 +41,23 @@ public class GameCacheManager : MonoBehaviour
     {
         GameData data = new GameData
         {
-            playerScore = judge.GetPlayerScore(),
-            aiScore = judge.GetAIScore(),
+            playerScore = judge != null ? judge.GetPlayerScore() : 0,
+            aiScore = judge != null ? judge.GetAIScore() : 0,
             difficulty = SettingsManager.Instance.DIFFICULT,
             map = SettingsManager.Instance.CURRENT_MAP,
+            sound = SettingsManager.Instance.SOUND_LEVEL,
             pointsToWin = SettingsManager.Instance.POINTS_TO_WIN,
             language = SettingsManager.Instance.LANGUAGE,
             teamA = new List<string>(),
             teamB = new List<string>()
         };
-
-        foreach (var p in spawner.teamAPlayers)
-            if (p != null) data.teamA.Add(p.name.Replace("(Clone)", ""));
-        foreach (var p in spawner.teamBPlayers)
-            if (p != null) data.teamB.Add(p.name.Replace("(Clone)", ""));
-
+        if (spawner != null)
+        {
+            foreach (var p in spawner.teamAPlayers)
+                if (p != null) data.teamA.Add(p.name.Replace("(Clone)", ""));
+            foreach (var p in spawner.teamBPlayers)
+                if (p != null) data.teamB.Add(p.name.Replace("(Clone)", ""));
+        }
         string json = JsonUtility.ToJson(data);
         PlayerPrefs.SetString(CACHE_KEY, json);
         PlayerPrefs.Save();
@@ -69,6 +72,17 @@ public class GameCacheManager : MonoBehaviour
         return JsonUtility.FromJson<GameData>(json);
     }
 
+
+    public void LoadSettings()
+    {
+        var data = LoadGame();
+        SettingsManager.Instance.LANGUAGE = data.language;
+        SettingsManager.Instance.CURRENT_MAP = data.map;
+        SettingsManager.Instance.DIFFICULT = data.difficulty;
+        SettingsManager.Instance.SOUND_LEVEL = data.sound;
+        SettingsManager.Instance.POINTS_TO_WIN = data.pointsToWin;
+    }
+
     public void ClearCache()
     {
         PlayerPrefs.DeleteKey(CACHE_KEY);
@@ -76,7 +90,7 @@ public class GameCacheManager : MonoBehaviour
         Debug.Log("🧹 Caché de partida eliminada");
     }
 
-    // ✅ Restaurar puntuaciones desde el caché
+    // ✅ Restaurar puntuaciones desde el caché Debug.Log($"Language: {data.language}");
     public void RestoreGame(Judge judge)
     {
         var data = LoadGame();

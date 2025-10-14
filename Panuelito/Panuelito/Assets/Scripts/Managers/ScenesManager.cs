@@ -17,6 +17,7 @@ public class ScenesManager : MonoBehaviour
     public GameObject restorePopupPanel;
     public Button restoreYesButton;
     public Button restoreNoButton;
+    public TextMeshProUGUI textCache;
 
     private void Awake()
     {
@@ -44,6 +45,7 @@ public class ScenesManager : MonoBehaviour
         if (GameCacheManager.Instance != null && GameCacheManager.Instance.HasSavedGame())
         {
             GameCacheManager.Instance.DebugPrintCache();
+            GameCacheManager.Instance.LoadSettings();
             mainPanel?.SetActive(false);
             settingsPanel?.SetActive(false);
             restorePopupPanel?.SetActive(true);
@@ -59,6 +61,9 @@ public class ScenesManager : MonoBehaviour
 
     private void Update()
     {
+        Debug.Log($"idioma :: {SettingsManager.Instance.LANGUAGE}");
+        if( textCache != null ) textCache.text = SettingsManager.Instance.LANGUAGE.Equals("English") ? "¿Do you want to restore the previous game?" : "¿Deseas restaurar la partida anterior?";
+
         if (playButton != null)
         {
             var textPlay = playButton.GetComponentInChildren<TextMeshProUGUI>();
@@ -120,6 +125,7 @@ public class ScenesManager : MonoBehaviour
     {
         Debug.Log("[ScenesManager] Restauración cancelada, volviendo al menú.");
         GameCacheManager.Instance.ClearCache();
+
         restorePopupPanel?.SetActive(false);
         ShowMainMenu();
     }

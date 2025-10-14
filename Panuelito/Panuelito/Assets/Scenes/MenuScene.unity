@@ -2513,7 +2513,6 @@ GameObject:
   - component: {fileID: 910038692}
   - component: {fileID: 910038693}
   - component: {fileID: 910038694}
-  - component: {fileID: 910038695}
   m_Layer: 0
   m_Name: ScenesManager
   m_TagString: Untagged
@@ -2556,6 +2555,7 @@ MonoBehaviour:
   restorePopupPanel: {fileID: 1065941507}
   restoreYesButton: {fileID: 1936676004}
   restoreNoButton: {fileID: 1345154953}
+  textCache: {fileID: 919298622}
 --- !u!114 &910038693
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2608,24 +2608,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3a3bbd83273aac64182d41dc1e764304, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!114 &910038695
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 910038690}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 19a16cf873b940b4286a0d95b9c9fc01, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  popupPanel: {fileID: 1065941507}
-  mainPanel: {fileID: 1091068050}
-  yesButton: {fileID: 1936676004}
-  noButton: {fileID: 1345154953}
-  spawner: {fileID: 0}
-  judge: {fileID: 0}
 --- !u!1 &910797344
 GameObject:
   m_ObjectHideFlags: 0
