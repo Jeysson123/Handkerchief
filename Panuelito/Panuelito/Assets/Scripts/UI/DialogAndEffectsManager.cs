@@ -46,6 +46,7 @@ public class DialogAndEffectsManager : MonoBehaviour
     public TextMeshPro textNumber;       // TextMeshPro 3D (no necesita Canvas)
     public GameObject dialogResult;
     public TextMeshPro textResult;
+    public GameObject dialogPlus1;
 
     private void Start()
     {
@@ -92,7 +93,7 @@ public class DialogAndEffectsManager : MonoBehaviour
                 ? "Team IA Winners"  : "Equipo IA ganadores")
                 : (SettingsManager.Instance.LANGUAGE.Equals("English")  ?  "Team PLAYER Winners" : "Equipo JUGADOR Ganadores");
         }
-
+        //TODO WORK IN PLAYER ROTATION CELEBRATION
         if (teamName.Equals("IA"))
         {
             aiController.playSlowMotion = true;
@@ -101,6 +102,7 @@ public class DialogAndEffectsManager : MonoBehaviour
         dialogResult.transform.position = new Vector3(winner.position.x - 15f, winner.position.y + 10f, winner.position.z);
         textResult.gameObject.transform.position = new Vector3(winner.position.x + 27f, winner.position.y - 12f, winner.position.z - 1);
         textResult.text = reason;
+        dialogPlus1.transform.position = new Vector3(winner.position.x + 5f, winner.position.y + 10f, winner.position.z);
 
         if (isPlayingEffect || winner == null) return;
         StartCoroutine(PlayEffectAndRestart(winner, teamName, celebrateFullTeam, onComplete));
@@ -111,6 +113,7 @@ public class DialogAndEffectsManager : MonoBehaviour
         isPlayingEffect = true;
         dialogResult.SetActive(true);
         textResult.gameObject.SetActive(true);
+        dialogPlus1.SetActive(true);
 
         if (playerMovement != null) playerMovement.enabled = false;
         if (aiController != null) aiController.enabled = false;
@@ -331,6 +334,7 @@ public class DialogAndEffectsManager : MonoBehaviour
 
         dialogResult.SetActive(false);
         textResult.gameObject.SetActive(false);
+        dialogPlus1.gameObject.SetActive(false);
         playerMovement.hkTaked = false;
         aiController.randomLine = Random.Range(0, 2);
 
