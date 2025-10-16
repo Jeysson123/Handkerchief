@@ -137,7 +137,6 @@ public class ScenesManager : MonoBehaviour
         restorePopupPanel?.SetActive(false);
         Debug.Log("[ScenesManager] Popup ocultado antes de cargar la escena ✅");
 
-        // Ejemplo: Proesa
         if ((SettingsManager.Instance.LANGUAGE.Equals("English")
             && SettingsManager.Instance.CURRENT_MAP.Equals("Parking"))
             || (SettingsManager.Instance.LANGUAGE.Equals("Spanish")
@@ -146,6 +145,17 @@ public class ScenesManager : MonoBehaviour
             mainPanel?.SetActive(false);
             settingsPanel?.SetActive(false);
             SceneManager.LoadScene("ProesaScene");
+        }
+
+
+        if ((SettingsManager.Instance.LANGUAGE.Equals("English")
+            && SettingsManager.Instance.CURRENT_MAP.Equals("Beach"))
+            || (SettingsManager.Instance.LANGUAGE.Equals("Spanish")
+            && SettingsManager.Instance.CURRENT_MAP.Equals("Playa")))
+        {
+            mainPanel?.SetActive(false);
+            settingsPanel?.SetActive(false);
+            SceneManager.LoadScene("BeachScene");
         }
     }
     #endregion
