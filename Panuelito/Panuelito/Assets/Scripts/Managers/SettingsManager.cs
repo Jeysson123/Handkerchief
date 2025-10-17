@@ -55,6 +55,7 @@ public class SettingsManager : MonoBehaviour
     public string CURRENT_MAP = "Parking";
     public int SOUND_LEVEL = 30; // 0 - 100
     public string LANGUAGE = "Spanish";
+    private AudioManager audioManager;
 
     private void Awake()
     {
@@ -71,6 +72,8 @@ public class SettingsManager : MonoBehaviour
 
     private void Start()
     {
+        audioManager = FindObjectOfType<AudioManager>();
+
         InitializeLanguageData();
 
         points = POINTS_TO_WIN;
@@ -159,7 +162,8 @@ public class SettingsManager : MonoBehaviour
 
     // Update UI
     private void UpdateUI()
-    {
+    { 
+        audioManager.PlayChooseSound();
         if (pointsValueText != null) pointsValueText.text = points.ToString();
         if (difficultyValueText != null) difficultyValueText.text = difficulties[difficultyIndex];
         if (mapValueText != null) mapValueText.text = maps[mapIndex];
@@ -191,6 +195,7 @@ public class SettingsManager : MonoBehaviour
     // Save settings
     private void SaveSettings()
     {
+        audioManager.PlayChooseSound();
         mainPanel.SetActive(true);
         settingsPanel.SetActive(false);
         Debug.Log($"💾 Settings saved: Points={points}, Difficulty={difficulties[difficultyIndex]}, Map={maps[mapIndex]}, Sound={sound}%, Language={LANGUAGE}");

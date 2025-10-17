@@ -18,6 +18,7 @@ public class ScenesManager : MonoBehaviour
     public Button restoreYesButton;
     public Button restoreNoButton;
     public TextMeshProUGUI textCache;
+    private AudioManager audioManager;
 
     private void Awake()
     {
@@ -40,6 +41,7 @@ public class ScenesManager : MonoBehaviour
         settingsButton?.onClick.AddListener(ShowSettings);
         restoreYesButton?.onClick.AddListener(RestoreGame);
         restoreNoButton?.onClick.AddListener(SkipRestore);
+        audioManager = FindObjectOfType<AudioManager>();
 
         // 🔹 Revisar si hay partida guardada
         if (GameCacheManager.Instance != null && GameCacheManager.Instance.HasSavedGame())
@@ -82,6 +84,7 @@ public class ScenesManager : MonoBehaviour
     #region Paneles
     public void ShowSettings()
     {
+        audioManager.PlayChooseSound();
         mainPanel?.SetActive(false);
         settingsPanel?.SetActive(true);
         restorePopupPanel?.SetActive(false);
@@ -134,6 +137,7 @@ public class ScenesManager : MonoBehaviour
     #region Juego
     public void PlayGame()
     {
+        audioManager.PlayChooseSound();
         restorePopupPanel?.SetActive(false);
         Debug.Log("[ScenesManager] Popup ocultado antes de cargar la escena ✅");
 

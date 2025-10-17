@@ -2513,6 +2513,7 @@ GameObject:
   - component: {fileID: 910038692}
   - component: {fileID: 910038693}
   - component: {fileID: 910038694}
+  - component: {fileID: 910038695}
   m_Layer: 0
   m_Name: ScenesManager
   m_TagString: Untagged
@@ -2608,6 +2609,24 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3a3bbd83273aac64182d41dc1e764304, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &910038695
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 910038690}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ffe340a11b3c718429dc3ba8ef05ded6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  backgroundMusic: {fileID: 0}
+  takeFintSound: {fileID: 0}
+  speedSound: {fileID: 0}
+  winSound: {fileID: 0}
+  loseSound: {fileID: 0}
+  chooseSound: {fileID: 8300000, guid: 1e8d3e0eb61dc174ab2324e4eaeb9ee2, type: 3}
 --- !u!1 &910797344
 GameObject:
   m_ObjectHideFlags: 0
