@@ -41,8 +41,8 @@ public class GameCacheManager : MonoBehaviour
     {
         GameData data = new GameData
         {
-            playerScore = judge != null ? judge.GetPlayerScore() : 0,
-            aiScore = judge != null ? judge.GetAIScore() : 0,
+            playerScore = judge.GetPlayerScore(),
+            aiScore = judge.GetAIScore(),
             difficulty = SettingsManager.Instance.DIFFICULT,
             map = SettingsManager.Instance.CURRENT_MAP,
             sound = SettingsManager.Instance.SOUND_LEVEL,

@@ -99,7 +99,6 @@ public class AIController : MonoBehaviour
                 if (currentAICharacter.transform.position.z < -15.6)
                 {
                     judge.AddPointToPlayer($"IA cruzo linea sin panuelo, → punto JUGADOR +1.", playerMovement.currentCharacter.transform);
-                    audioManager.PlayWinSound();
 
                 }
             }
@@ -109,7 +108,6 @@ public class AIController : MonoBehaviour
                 if (currentAICharacter.transform.position.z < -15.6)
                 {
                     judge.AddPointToPlayer($"IA cruzo linea con panuelo hacia base equivocada, → punto JUGADOR +1.", playerMovement.currentCharacter.transform);
-                    audioManager.PlayWinSound();
 
                 }
             }

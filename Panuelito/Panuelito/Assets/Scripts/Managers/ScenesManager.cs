@@ -37,11 +37,11 @@ public class ScenesManager : MonoBehaviour
     private void Start()
     {
         // 🔹 Asignar listeners
+        audioManager = FindObjectOfType<AudioManager>();
         playButton?.onClick.AddListener(PlayGame);
         settingsButton?.onClick.AddListener(ShowSettings);
         restoreYesButton?.onClick.AddListener(RestoreGame);
         restoreNoButton?.onClick.AddListener(SkipRestore);
-        audioManager = FindObjectOfType<AudioManager>();
 
         // 🔹 Revisar si hay partida guardada
         if (GameCacheManager.Instance != null && GameCacheManager.Instance.HasSavedGame())

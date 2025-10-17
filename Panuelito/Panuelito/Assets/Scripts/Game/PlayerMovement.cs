@@ -109,7 +109,6 @@ public class PlayerMovement : MonoBehaviour, IPointerDownHandler, IPointerUpHand
             {
                 judge.AddPointToIA(SettingsManager.Instance.LANGUAGE.Equals("English") ? "Player crossed the line without a handkerchief, → point IA +1."
                     : $"Jugador cruzo linea sin panuelo, → punto IA +1.", aiController.currentAICharacter.transform);
-                audioManager.PlayLoseSound();
             }
         }
         else if (hkTaked)
@@ -119,7 +118,6 @@ public class PlayerMovement : MonoBehaviour, IPointerDownHandler, IPointerUpHand
             {
                 judge.AddPointToIA(SettingsManager.Instance.LANGUAGE.Equals("English") ? "Player crossed the line with a handkerchief towards the wrong base, → point IA +1."
                     : $"Jugador cruzo linea con panuelo hacia base equivocada, → punto IA +1.", aiController.currentAICharacter.transform);
-                audioManager.PlayLoseSound();
             }
         }
 

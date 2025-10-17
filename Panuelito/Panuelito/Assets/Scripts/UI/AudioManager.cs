@@ -3,10 +3,10 @@ using System.Collections;
 
 public class AudioManager : MonoBehaviour
 {
-    [Header("🎵 Música de fondo")]
+    [Header("Música de fondo")]
     public AudioClip backgroundMusic;
 
-    [Header("🎧 Clips de efectos")]
+    [Header("Clips de efectos")]
     public AudioClip takeFintSound;
     public AudioClip speedSound;
     public AudioClip winSound;

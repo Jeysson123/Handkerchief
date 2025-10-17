@@ -73,7 +73,6 @@ public class SettingsManager : MonoBehaviour
     private void Start()
     {
         audioManager = FindObjectOfType<AudioManager>();
-
         InitializeLanguageData();
 
         points = POINTS_TO_WIN;
@@ -162,7 +161,7 @@ public class SettingsManager : MonoBehaviour
 
     // Update UI
     private void UpdateUI()
-    { 
+    {
         audioManager.PlayChooseSound();
         if (pointsValueText != null) pointsValueText.text = points.ToString();
         if (difficultyValueText != null) difficultyValueText.text = difficulties[difficultyIndex];

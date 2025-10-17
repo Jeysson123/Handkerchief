@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.3708984, g: 0.37837017, b: 0.35722524, a: 1}
+  m_IndirectSpecularColor: {r: 0.44657826, g: 0.49641263, b: 0.57481676, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -2622,10 +2622,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   backgroundMusic: {fileID: 0}
-  takeFintSound: {fileID: 0}
-  speedSound: {fileID: 0}
-  winSound: {fileID: 0}
-  loseSound: {fileID: 0}
+  takeFintSound: {fileID: 8300000, guid: b505a9d1de2ad2f41aa6eeff29a57687, type: 3}
+  speedSound: {fileID: 8300000, guid: 1e35a30ddc6c6b04ea374d1203f06e6e, type: 3}
+  winSound: {fileID: 8300000, guid: f5e06dae1470e014493dbf2a23497617, type: 3}
+  loseSound: {fileID: 8300000, guid: 643f1b2d9c55ac649926b919ae630863, type: 3}
   chooseSound: {fileID: 8300000, guid: 1e8d3e0eb61dc174ab2324e4eaeb9ee2, type: 3}
 --- !u!1 &910797344
 GameObject:

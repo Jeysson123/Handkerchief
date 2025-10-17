@@ -37,6 +37,7 @@ public class Judge : MonoBehaviour
 
     private List<GameObject> hiddenPlayers = new List<GameObject>();
     private CinematicCameraController cinematicCamera;
+    private bool updateIATextPosition = true;
     private AudioManager audioManager;
 
     private void Start()
@@ -68,7 +69,6 @@ public class Judge : MonoBehaviour
             Transform iatransform = aIController.currentAICharacter.transform;
             AddPointToIA(SettingsManager.Instance.LANGUAGE.Equals("English") ? "Player selected, wrong index → AI point +1."
                 : "Jugador selecciono , index equivocado → punto IA +1.", iatransform);
-            audioManager.PlayLoseSound();
         }
     }
 
@@ -143,7 +143,6 @@ public class Judge : MonoBehaviour
                 cinematicCamera.PlayCinematic(playerMovement.currentCharacter.transform);
                 AddPointToPlayer(SettingsManager.Instance.LANGUAGE.Equals("English") ? $"Player ({nearestA.name}) intercepted the AI, → point PLAYER +1."
                     : $"Jugador ({nearestA.name}) interceptó a la IA, → punto JUGADOR +1.", nearestA.transform);
-                audioManager.PlayWinSound();
                 return;
             }
 
@@ -155,7 +154,6 @@ public class Judge : MonoBehaviour
                     HideOtherPlayers(iatransform);
                     AddPointToIA(SettingsManager.Instance.LANGUAGE.Equals("English") ? "IA crossed the score line → point IA +1"
                         : "IA cruzó la línea de puntuación → punto IA +1.", iatransform);
-                    audioManager.PlayLoseSound();
                     return;
                 }
             }
@@ -168,13 +166,11 @@ public class Judge : MonoBehaviour
                 {
                     AddPointToIA(SettingsManager.Instance.LANGUAGE.Equals("English") ? "AI reached its base with the handkerchief, → AI point +1."
                         : "IA llegó a su base con el pañuelo, → punto IA +1.", winner);
-                    audioManager.PlayLoseSound();
                 }
                 else
                 {
                     AddPointToPlayer(SettingsManager.Instance.LANGUAGE.Equals("English") ? "Player touched the handkerchief before the AI ​​reached its base. → PLAYER point +1."
                         : "Jugador tocó el pañuelo antes de que la IA llegara a su base. → punto JUGADOR +1.", winner);
-                    audioManager.PlayWinSound();
                 }
                 return;
             }
@@ -195,7 +191,6 @@ public class Judge : MonoBehaviour
                 HideOtherPlayers(nearestB.transform);
                 AddPointToIA(SettingsManager.Instance.LANGUAGE.Equals("English") ? $"AI ({nearestB.name}) intercepted the player, → AI point +1."
                     : $"IA ({nearestB.name}) interceptó al jugador, → punto IA +1.", nearestB.transform);
-                audioManager.PlayLoseSound();
                 return;
             }
 
@@ -207,7 +202,6 @@ public class Judge : MonoBehaviour
                     HideOtherPlayers(playerTransform);
                     AddPointToPlayer(SettingsManager.Instance.LANGUAGE.Equals("English") ? $"Player crossed the score line → point PLAYER +1."
                         : "Jugador cruzó la línea de puntuación → punto JUGADOR +1.", playerTransform);
-                    audioManager.PlayWinSound();
                     return;
                 }
             }
@@ -217,7 +211,6 @@ public class Judge : MonoBehaviour
                 HideOtherPlayers(holder);
                 AddPointToPlayer(SettingsManager.Instance.LANGUAGE.Equals("English") ? "Player reached his base with the handkerchief, → point PLAYER +1."
                     : "Jugador llegó a su base con el pañuelo, → punto JUGADOR +1.", holder);
-                audioManager.PlayWinSound();
                 return;
             }
         }
@@ -301,6 +294,7 @@ public class Judge : MonoBehaviour
     public void AddPointToPlayer(string reason, Transform winner)
     {
         if (roundEnded) return;
+        audioManager.PlayWinSound();
 
         roundEnded = true;
         playerScore++;
@@ -320,6 +314,7 @@ public class Judge : MonoBehaviour
     public void AddPointToIA(string reason, Transform winner)
     {
         if (roundEnded) return;
+        audioManager.PlayLoseSound();
 
         roundEnded = true;
         aiScore++;
@@ -377,7 +372,14 @@ public class Judge : MonoBehaviour
     private void UpdateScoreUI()
     {
         string labelPlayer = SettingsManager.Instance.LANGUAGE.Equals("English") ? "Player" : "Jugador";
-        string labelIA = SettingsManager.Instance.LANGUAGE.Equals("English") ? "IA" : "BOTS";
+        string labelIA = SettingsManager.Instance.LANGUAGE.Equals("English") ? "IA" : "Maquina";
+
+        //SPECIAL CASE -> ALIGMENT IA
+        if (SettingsManager.Instance.LANGUAGE.Equals("Spanish") && updateIATextPosition)
+        {
+            aiScoreText.transform.position += new Vector3(30f, 0f, 0f);
+            updateIATextPosition = false;
+        }
 
         if (playerScoreText != null)
             playerScoreText.text = $"{labelPlayer} : {playerScore}";
