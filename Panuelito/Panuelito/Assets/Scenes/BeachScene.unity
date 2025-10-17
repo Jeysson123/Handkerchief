@@ -4774,7 +4774,7 @@ MonoBehaviour:
   baseMoveSpeed: 1
   maxSpeed: 20
   speedStep: 1
-  speedDecayRate: 1
+  speedDecayRate: 5
   k: 2
   fintDuration: 1.2
   armRaiseAngle: 100

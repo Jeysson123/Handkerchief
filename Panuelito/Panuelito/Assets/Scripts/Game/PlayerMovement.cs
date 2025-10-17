@@ -17,7 +17,7 @@ public class PlayerMovement : MonoBehaviour, IPointerDownHandler, IPointerUpHand
     public float baseMoveSpeed = 0f;
     public float maxSpeed = 20f;
     public float speedStep = 1f;
-    public float speedDecayRate = 1f;
+    public float speedDecayRate = 3f;
 
     [Header("Configuración de finta / tomar")]
     [Range(0f, 2f)]
