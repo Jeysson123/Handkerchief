@@ -36,6 +36,15 @@ public class ScenesManager : MonoBehaviour
 
     private void Start()
     {
+        // Bloquear orientación a landscape
+        Screen.orientation = ScreenOrientation.LandscapeLeft;
+
+        // Opcional: desactivar auto-rotación
+        Screen.autorotateToPortrait = false;
+        Screen.autorotateToPortraitUpsideDown = false;
+        Screen.autorotateToLandscapeLeft = true;
+        Screen.autorotateToLandscapeRight = true;
+
         // 🔹 Asignar listeners
         audioManager = FindObjectOfType<AudioManager>();
         playButton?.onClick.AddListener(PlayGame);
