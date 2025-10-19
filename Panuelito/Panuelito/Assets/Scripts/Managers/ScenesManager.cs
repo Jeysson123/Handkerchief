@@ -8,6 +8,7 @@ public class ScenesManager : MonoBehaviour
     [Header("Panels")]
     public GameObject mainPanel;
     public GameObject settingsPanel;
+    public GameObject backgroundPanel;
 
     [Header("Buttons (Assign in Inspector)")]
     public Button playButton;
@@ -148,6 +149,7 @@ public class ScenesManager : MonoBehaviour
     {
         audioManager.PlayChooseSound();
         restorePopupPanel?.SetActive(false);
+        backgroundPanel?.SetActive(false);
         Debug.Log("[ScenesManager] Popup ocultado antes de cargar la escena ✅");
 
         if ((SettingsManager.Instance.LANGUAGE.Equals("English")
