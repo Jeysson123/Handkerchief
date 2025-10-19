@@ -2698,16 +2698,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ffe340a11b3c718429dc3ba8ef05ded6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  backgroundMusic: {fileID: 0}
+  backgroundMusic: {fileID: 8300000, guid: 15f2abc24a8aa3a488b99f2b7f1e8de3, type: 3}
   takeFintSound: {fileID: 8300000, guid: b505a9d1de2ad2f41aa6eeff29a57687, type: 3}
   speedSound: {fileID: 8300000, guid: 1e35a30ddc6c6b04ea374d1203f06e6e, type: 3}
   winSound: {fileID: 8300000, guid: f5e06dae1470e014493dbf2a23497617, type: 3}
   loseSound: {fileID: 8300000, guid: 643f1b2d9c55ac649926b919ae630863, type: 3}
   chooseSound: {fileID: 8300000, guid: 1e8d3e0eb61dc174ab2324e4eaeb9ee2, type: 3}
-  rainSound: {fileID: 0}
-  thunderSound: {fileID: 0}
-  nightCricketsSound: {fileID: 0}
-  windSound: {fileID: 0}
+  rainSound: {fileID: 8300000, guid: b0523246b45a5d545af6546c9f7600e7, type: 3}
+  thunderSound: {fileID: 8300000, guid: 8e7a59be0abb9304b962b3723a27db2f, type: 3}
+  nightCricketsSound: {fileID: 8300000, guid: e14da44e3ecc52e41b2d688c038723b6, type: 3}
+  windSound: {fileID: 8300000, guid: f408f5df823bdb64ca8f137fe2a65311, type: 3}
 --- !u!1 &910797344
 GameObject:
   m_ObjectHideFlags: 0

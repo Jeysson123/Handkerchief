@@ -4877,7 +4877,7 @@ MonoBehaviour:
   daySkybox: {fileID: 2100000, guid: 43bad06c7873c3a4a8fe021b5354af5a, type: 2}
   nightSkybox: {fileID: 2100000, guid: 969e867f0ccebac488a2d4f2ed939408, type: 2}
   audioManager: {fileID: 0}
-  weatherChangeInterval: 25
+  weatherChangeInterval: 120
   dayNightTransitionSpeed: 0.5
   sunRotationSpeed: 5
   cloudCount: 15
@@ -4885,6 +4885,9 @@ MonoBehaviour:
   cloudHeight: 60
   cloudMoveSpeed: 3
   cloudFadeSpeed: 0.5
+  minNightIntensity: 0.45
+  ambientNightColor: {r: 0.25, g: 0.3, b: 0.4, a: 1}
+  ambientDayColor: {r: 1, g: 0.98, b: 0.9, a: 1}
 --- !u!114 &527162027
 MonoBehaviour:
   m_ObjectHideFlags: 0

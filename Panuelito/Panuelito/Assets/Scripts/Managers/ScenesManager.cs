@@ -147,6 +147,7 @@ public class ScenesManager : MonoBehaviour
     #region Juego
     public void PlayGame()
     {
+        audioManager.StopBackgroundMusic();
         audioManager.PlayChooseSound();
         restorePopupPanel?.SetActive(false);
         backgroundPanel?.SetActive(false);

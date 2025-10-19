@@ -5,26 +5,32 @@ using System.Collections.Generic;
 public class WeatherSystem : MonoBehaviour
 {
     [Header("Referencias")]
-    public Light directionalLight;          // Sol o luna
-    public ParticleSystem rainEffect;       // Lluvia
-    public GameObject cloudPrefab;          // Prefab de nube individual
-    public Material daySkybox;              // Cielo de día
-    public Material nightSkybox;            // Cielo de noche
+    public Light directionalLight;
+    public ParticleSystem rainEffect;
+    public GameObject cloudPrefab;
+    public Material daySkybox;
+    public Material nightSkybox;
 
     [Header("Audio Manager")]
-    public AudioManager audioManager;       // Referencia al AudioManager
+    public AudioManager audioManager;
 
     [Header("Configuración del clima")]
-    public float weatherChangeInterval = 25f;       // Cada cuánto cambia el clima
-    public float dayNightTransitionSpeed = 0.5f;    // Velocidad del cambio día/noche
-    public float sunRotationSpeed = 5f;             // Velocidad de rotación del sol
+    public float weatherChangeInterval = 120f;
+    public float dayNightTransitionSpeed = 0.5f;
+    public float sunRotationSpeed = 5f;
 
     [Header("Configuración de nubes")]
-    public int cloudCount = 15;                     // Cantidad máxima de nubes
-    public Vector2 cloudSpawnArea = new Vector2(150, 150); // Área donde aparecen
+    public int cloudCount = 15;
+    public Vector2 cloudSpawnArea = new Vector2(150, 150);
     public float cloudHeight = 60f;
     public float cloudMoveSpeed = 3f;
     public float cloudFadeSpeed = 0.5f;
+
+    [Header("Iluminación mínima de noche")]
+    [Range(0.2f, 1f)]
+    public float minNightIntensity = 0.45f;
+    public Color ambientNightColor = new Color(0.25f, 0.3f, 0.4f);
+    public Color ambientDayColor = new Color(1f, 0.98f, 0.9f);
 
     private bool isDay = true;
     private bool isRaining = false;
@@ -35,13 +41,16 @@ public class WeatherSystem : MonoBehaviour
 
     void Start()
     {
-        // Buscar componentes en escena
         audioManager = FindObjectOfType<AudioManager>();
         if (directionalLight == null)
             directionalLight = RenderSettings.sun;
 
         timer = weatherChangeInterval;
         ApplyWeather();
+
+        // Asegura un inicio equilibrado
+        RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
+        RenderSettings.ambientLight = ambientDayColor;
     }
 
     void Update()
@@ -50,7 +59,6 @@ public class WeatherSystem : MonoBehaviour
 
         if (timer <= 0f)
         {
-            // Cambio aleatorio de clima
             isDay = Random.value > 0.5f;
             isRaining = Random.value > 0.5f;
             hasClouds = Random.value > 0.3f;
@@ -59,31 +67,34 @@ public class WeatherSystem : MonoBehaviour
             timer = weatherChangeInterval;
         }
 
-        // Rotar la luz solar (simula el paso del día)
         if (directionalLight != null)
             directionalLight.transform.Rotate(Vector3.right, sunRotationSpeed * Time.deltaTime);
 
-        // Transición de luz y color suave
         if (directionalLight != null)
         {
-            float targetIntensity = isDay ? 1.1f : 0.15f;
+            float targetIntensity = isDay ? 1.2f : minNightIntensity;
             directionalLight.intensity = Mathf.Lerp(directionalLight.intensity, targetIntensity, Time.deltaTime * dayNightTransitionSpeed);
 
-            Color targetColor = isDay ? new Color(1f, 0.95f, 0.8f) : new Color(0.25f, 0.3f, 0.5f);
+            Color targetColor = isDay
+                ? new Color(1f, 0.97f, 0.9f)
+                : new Color(0.4f, 0.5f, 0.7f);
             directionalLight.color = Color.Lerp(directionalLight.color, targetColor, Time.deltaTime * dayNightTransitionSpeed);
+
+            RenderSettings.ambientLight = Color.Lerp(
+                RenderSettings.ambientLight,
+                isDay ? ambientDayColor : ambientNightColor,
+                Time.deltaTime * dayNightTransitionSpeed
+            );
         }
 
-        // Mover las nubes
         if (hasClouds)
             MoveClouds();
     }
 
     private void ApplyWeather()
     {
-        // Cambiar skybox
         RenderSettings.skybox = isDay ? daySkybox : nightSkybox;
 
-        // Control de lluvia
         if (rainEffect != null)
         {
             if (isRaining && !rainEffect.isPlaying)
@@ -92,46 +103,43 @@ public class WeatherSystem : MonoBehaviour
                 rainEffect.Stop();
         }
 
-        // Control de nubes
         ManageClouds();
 
-        // --- 🎧 Sonidos ---
         if (audioManager != null)
-        {
-            audioManager.StopWeatherSounds(); // ⛔ No detiene música, solo el clima
+            StartCoroutine(SwapWeatherSound());
 
-            if (isRaining)
-            {
-                audioManager.PlayRainSound();
-                StartCoroutine(PlayThunderRandom());
-            }
-            else if (!isDay)
-            {
-                audioManager.PlayNightCricketsSound();
-            }
-            else if (hasClouds)
-            {
-                audioManager.PlayWindSound();
-            }
-        }
-
-        Debug.Log($"🌤️ Clima → {(isDay ? "Día" : "Noche")} | {(isRaining ? "Lluvia" : "Soleado")} | {(hasClouds ? "Nubes" : "Cielo despejado")}");
+        Debug.Log($"🌤️ Clima → {(isDay ? "Día" : "Noche")} | {(isRaining ? "Lluvia" : "Soleado")} | {(hasClouds ? "Nubes" : "Despejado")}");
     }
 
-    // --- ☁️ Gestión de nubes ---
+    private IEnumerator SwapWeatherSound()
+    {
+        audioManager.StopWeatherSounds();
+        yield return new WaitForSeconds(0.1f);
+
+        if (isRaining)
+        {
+            audioManager.PlayRainSound();
+            StartCoroutine(PlayThunderRandom());
+        }
+        else if (!isDay)
+        {
+            audioManager.PlayNightCricketsSound();
+        }
+        else if (hasClouds)
+        {
+            audioManager.PlayWindSound();
+        }
+    }
+
     private void ManageClouds()
     {
         if (!hasClouds)
         {
-            // Desaparecer lentamente las nubes
             StartCoroutine(FadeOutClouds());
             return;
         }
 
-        // Si ya hay nubes activas, no crear más
         if (activeClouds.Count >= cloudCount) return;
-
-        // Crear nubes nuevas poco a poco
         StartCoroutine(SpawnClouds());
     }
 
@@ -201,7 +209,6 @@ public class WeatherSystem : MonoBehaviour
         }
     }
 
-    // --- ⚡ Truenos aleatorios ---
     private IEnumerator PlayThunderRandom()
     {
         while (isRaining && audioManager != null)
