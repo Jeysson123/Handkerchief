@@ -155,6 +155,29 @@ public class PlayerMovement : MonoBehaviour, IPointerDownHandler, IPointerUpHand
             speedBar.value = currentSpeed;
             UpdateBarColor();
         }
+
+
+        //Estado Idle -> si anda cerca del HK
+        GameObject hk = (spawner != null) ? spawner.Handkerchief : null;
+        Vector3 originalPos = (spawner != null) ? spawner.OriginalHandkerchiefPos : Vector3.zero;
+        Vector3 playerPosFlat = new Vector3(currentCharacter.transform.position.x, 0, currentCharacter.transform.position.z);
+        Vector3 hkPosFlat = new Vector3(hk.transform.position.x, 0, hk.transform.position.z);
+        float distXZ = Vector3.Distance(playerPosFlat, hkPosFlat);
+
+        // Distancia desde posición original del pañuelo
+        float distToOriginal = Vector3.Distance(hk.transform.position, originalPos);
+
+        // Margen de tolerancia horizontal (puedes aumentar si es necesario)
+        float xzTolerance = 2f;
+
+        // Solo importa la distancia horizontal y que el pañuelo esté en su posición original
+        if (distXZ <= xzTolerance && distToOriginal < 0.2f)
+        {
+            currentSpeed = 0;
+            currentAnimator.SetFloat("speed", currentSpeed);
+
+        }
+
     }
 
     void LateUpdate()

@@ -120,13 +120,8 @@ public class ScenesManager : MonoBehaviour
         if(modal != null)
         {
             Destroy(modal, 3f);
-            Debug.Log(" EL MODAL DESTRUIDO");
             GameObject effect = GameObject.Find("ScreenEffect");
             Destroy(effect, 3f);
-        }
-        else
-        {
-            Debug.Log("NO EXISTE EL MODAL"); 
         }
 
     }
@@ -264,7 +259,7 @@ public class ScenesManager : MonoBehaviour
         RectTransform panelRect = panelGO.GetComponent<RectTransform>();
         panelRect.anchorMin = new Vector2(0.5f, 0.5f);
         panelRect.anchorMax = new Vector2(0.5f, 0.5f);
-        panelRect.sizeDelta = new Vector2(600, 200);
+        panelRect.sizeDelta = new Vector2(1300, 600);
         panelRect.anchoredPosition = Vector2.zero;
         currentModalObjects.Add(panelGO);
 

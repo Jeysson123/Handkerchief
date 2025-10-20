@@ -21,6 +21,7 @@ public class AIController : MonoBehaviour
     private float baseSpeed;
     private float currentSpeed;
     private float speedFactor;
+    public float originalSpeed = 0f;
 
     private bool isActing = false;
     public bool returningToBase = false;
@@ -83,6 +84,10 @@ public class AIController : MonoBehaviour
                 speedFactor = Random.Range(minSpeedFactor, maxSpeedFactor);
                 currentSpeed = baseSpeed * speedFactor;
             }
+
+            //store true SPEED
+            originalSpeed = currentSpeed;
+
         }
     }
 
@@ -125,7 +130,8 @@ public class AIController : MonoBehaviour
                 audioManager.PlayTakeFintSound();
                 playSlowMotion = false;
             }
-
+            currentSpeed=originalSpeed;
+            currentAnimator.SetFloat("speed", currentSpeed);
         }
         else
         {
@@ -144,7 +150,31 @@ public class AIController : MonoBehaviour
                     if (randomLine > 0)
                     {
                         targetPos.z -= 20;
+                    } else
+                    {
+                        Vector3 aiPosFlat = new Vector3(currentAICharacter.transform.position.x, 0, currentAICharacter.transform.position.z);
+                        Vector3 hkPosFlat = new Vector3(spawner.Handkerchief.transform.position.x, 0, spawner.Handkerchief.transform.position.z);
+                        float distXZ = Vector3.Distance(aiPosFlat, hkPosFlat);
+                        float xzTolerance = 2f;
+
+                        // ✅ Solo IA y pañuelo disponible
+                        if (!returningToBase
+                            && spawner.Handkerchief.transform.parent == null // nadie lo tiene
+                            && distXZ <= xzTolerance
+                            && Vector3.Distance(spawner.Handkerchief.transform.position, spawner.OriginalHandkerchiefPos) < 0.2f)
+                        {
+                            if (currentAnimator != null)
+                            {
+                                //animator.Play("Idle", 0, 0f);
+                                currentSpeed = 0;
+                                currentAnimator.SetFloat("speed", currentSpeed);
+                                StartCoroutine(PerformRandomAction());
+                            }
+
+                        }
+
                     }
+
                 }
             }
             else
@@ -186,7 +216,8 @@ public class AIController : MonoBehaviour
         }
     }
 
-    public void IAReaction() {
+    public void IAReaction()
+    {
 
         Vector3 playerPosFlat = new Vector3(currentAICharacter.transform.position.x, 0, currentAICharacter.transform.position.z);
         Vector3 hkPosFlat = new Vector3(spawner.Handkerchief.transform.position.x, 0, spawner.Handkerchief.transform.position.z);
@@ -194,7 +225,8 @@ public class AIController : MonoBehaviour
         float xzTolerance = 5f;
 
 
-        if (!returningToBase && distXZ <= xzTolerance && Vector3.Distance(spawner.Handkerchief.transform.position, spawner.OriginalHandkerchiefPos) < 0.2f)
+        if (!returningToBase && distXZ <= xzTolerance 
+            && Vector3.Distance(spawner.Handkerchief.transform.position, spawner.OriginalHandkerchiefPos) < 0.2f)
         {
             Vector3 targetPos = spawner.Handkerchief.transform.position; // pañuelo disponible
 
@@ -214,7 +246,7 @@ public class AIController : MonoBehaviour
                 }
             }
         }
-     }
+    }
 
     private IEnumerator PerformRandomAction()
     {

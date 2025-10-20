@@ -4323,7 +4323,7 @@ MonoBehaviour:
   baseMoveSpeed: 1
   maxSpeed: 20
   speedStep: 1
-  speedDecayRate: 4
+  speedDecayRate: 1
   k: 2
   fintDuration: 1.2
   armRaiseAngle: 100
@@ -12826,6 +12826,7 @@ MonoBehaviour:
   actionCooldownMin: 0.5
   actionCooldownMax: 2
   currentAICharacter: {fileID: 0}
+  originalSpeed: 0
   returningToBase: 0
   playSlowMotion: 1
   randomLine: 0
