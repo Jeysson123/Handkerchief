@@ -76,7 +76,7 @@ public class HandkerchiefSpawner : MonoBehaviour
             originalSpeedValue = speedSlider.value;
 
         // 🟢 Restaurar solo una vez al inicio
-        if (GameCacheManager.Instance != null && GameCacheManager.Instance.HasSavedGame() && !hasRestoredOnce)
+        if (GameCacheManager.Instance != null && GameCacheManager.Instance.HasSavedGame("GameCache") && !hasRestoredOnce)
         {
             Debug.Log("♻️ Restaurando partida desde caché...");
             hasRestoredOnce = true;
@@ -248,7 +248,7 @@ public class HandkerchiefSpawner : MonoBehaviour
     public void RestoreFromCache()
     {
         var cache = GameCacheManager.Instance;
-        if (cache == null || !cache.HasSavedGame()) return;
+        if (cache == null || !cache.HasSavedGame("GameCache")) return;
 
         var data = cache.LoadGame();
         if (data == null) return;

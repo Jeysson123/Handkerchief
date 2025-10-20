@@ -2,6 +2,7 @@
 using System.Collections;
 using TMPro; // TextMeshPro 3D
 using System.Collections.Generic;
+using UnityEngine.SceneManagement;
 
 public class DialogAndEffectsManager : MonoBehaviour
 {
@@ -340,5 +341,12 @@ public class DialogAndEffectsManager : MonoBehaviour
 
         isPlayingEffect = false;
         onComplete?.Invoke();
+
+        //Match is ended
+        if (celebrateFullTeam)
+        {
+            GameCacheManager.Instance.SaveEndResult();
+            SceneManager.LoadScene("MenuScene", LoadSceneMode.Single);
+        }
     }
 }

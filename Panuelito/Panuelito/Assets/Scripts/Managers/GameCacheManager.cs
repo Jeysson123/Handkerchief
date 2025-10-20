@@ -19,7 +19,14 @@ public class GameCacheManager : MonoBehaviour
         public List<string> teamB;
     }
 
+    [System.Serializable]
+    public class EndData
+    {
+        public bool ended;
+    }
+
     private const string CACHE_KEY = "GameCache";
+    private const string END_MATCH_KEY = "GameFinished";
 
     private void Awake()
     {
@@ -32,9 +39,9 @@ public class GameCacheManager : MonoBehaviour
         DontDestroyOnLoad(gameObject);
     }
 
-    public bool HasSavedGame()
+    public bool HasSavedGame(string key)
     {
-        return PlayerPrefs.HasKey(CACHE_KEY);
+        return PlayerPrefs.HasKey(key);
     }
 
     public void SaveGame(Judge judge, HandkerchiefSpawner spawner)
@@ -65,13 +72,34 @@ public class GameCacheManager : MonoBehaviour
         Debug.Log("💾 Partida guardada en caché");
     }
 
+    public void SaveEndResult()
+    {
+        EndData data = new EndData
+        {
+            ended = true
+        };
+
+        string json = JsonUtility.ToJson(data);
+        PlayerPrefs.SetString(END_MATCH_KEY, json);
+        PlayerPrefs.Save();
+
+        Debug.Log("💾 Finalizacion partida guardada en caché");
+    }
+
     public GameData LoadGame()
     {
-        if (!HasSavedGame()) return null;
+        if (!HasSavedGame(CACHE_KEY)) return null;
         string json = PlayerPrefs.GetString(CACHE_KEY);
         return JsonUtility.FromJson<GameData>(json);
     }
 
+    public bool ContainEndMatchResult()
+    {
+        if (!HasSavedGame(END_MATCH_KEY)) return false;
+        string json = PlayerPrefs.GetString(END_MATCH_KEY);
+        var result = JsonUtility.FromJson<EndData>(json);
+        return result.ended;
+    }
 
     public void LoadSettings()
     {
@@ -83,9 +111,9 @@ public class GameCacheManager : MonoBehaviour
         SettingsManager.Instance.POINTS_TO_WIN = data.pointsToWin;
     }
 
-    public void ClearCache()
+    public void ClearCache(string key)
     {
-        PlayerPrefs.DeleteKey(CACHE_KEY);
+        PlayerPrefs.DeleteKey(key);
         PlayerPrefs.Save();
         Debug.Log("🧹 Caché de partida eliminada");
     }
