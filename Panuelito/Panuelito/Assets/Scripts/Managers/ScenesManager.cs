@@ -57,10 +57,16 @@ public class ScenesManager : MonoBehaviour
             }
             else
             {
+
                 StartCoroutine(LoadSceneAsync("MenuScene"));
+
             }
 
             endMsg = string.Empty;
+        }
+        else
+        {
+            FindObjectOfType<AdManager>().ShowInterstitial(); //Play ADS
         }
     }
 
@@ -347,6 +353,7 @@ public class ScenesManager : MonoBehaviour
             if (obj != null) Destroy(obj);
 
         currentModalObjects.Clear();
+
     }
     #endregion
 }

@@ -2590,6 +2590,7 @@ GameObject:
   - component: {fileID: 910038693}
   - component: {fileID: 910038694}
   - component: {fileID: 910038695}
+  - component: {fileID: 910038696}
   m_Layer: 0
   m_Name: ScenesManager
   m_TagString: Untagged
@@ -2634,7 +2635,6 @@ MonoBehaviour:
   restoreYesButton: {fileID: 1936676004}
   restoreNoButton: {fileID: 1345154953}
   textCache: {fileID: 919298622}
-  winEffectPrefab: {fileID: 1289543790355709915, guid: b99922c2f59b1a542bdd06ae8bee47ae, type: 3}
 --- !u!114 &910038693
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2709,6 +2709,18 @@ MonoBehaviour:
   thunderSound: {fileID: 8300000, guid: 8e7a59be0abb9304b962b3723a27db2f, type: 3}
   nightCricketsSound: {fileID: 8300000, guid: e14da44e3ecc52e41b2d688c038723b6, type: 3}
   windSound: {fileID: 8300000, guid: f408f5df823bdb64ca8f137fe2a65311, type: 3}
+--- !u!114 &910038696
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 910038690}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7078f88f514aa834882490b4954ae1ab, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &910797344
 GameObject:
   m_ObjectHideFlags: 0
