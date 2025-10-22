@@ -2,6 +2,7 @@
 using System.Collections;
 using TMPro; // TextMeshPro 3D
 using System.Collections.Generic;
+using System.Collections;
 using UnityEngine.SceneManagement;
 
 public class DialogAndEffectsManager : MonoBehaviour
@@ -64,6 +65,22 @@ public class DialogAndEffectsManager : MonoBehaviour
         }
     }
 
+    public void Update()
+    {
+        if (playerMovement.currentCharacter != null)
+        {
+
+            if (playerMovement.currentCharacter.transform.position.x < -89.3604
+              || playerMovement.currentCharacter.transform.position.x > 96.98035
+              || playerMovement.currentCharacter.transform.position.z > 118.1293
+              || playerMovement.currentCharacter.transform.position.z < -119.9638)
+            {
+                StartCoroutine(RestoreCameraAndResetRound());
+            }
+
+        }
+    }
+
     public IEnumerator ShowNumber()
     {
         if (dialogNumber == null || textNumber == null) yield break;
@@ -94,7 +111,7 @@ public class DialogAndEffectsManager : MonoBehaviour
                 ? "Team IA Winners" : "Equipo IA ganadores")
                 : (SettingsManager.Instance.LANGUAGE.Equals("English") ? "Team PLAYER Winners" : "Equipo JUGADOR Ganadores");
         }
-        //TODO WORK IN PLAYER ROTATION CELEBRATION
+
         if (teamName.Equals("IA"))
         {
             aiController.playSlowMotion = true;
@@ -275,16 +292,40 @@ public class DialogAndEffectsManager : MonoBehaviour
         yield return new WaitForSeconds(effectDuration);
 
         // ✅ Volver a mostrar los personajes ocultos
-        foreach (var p in hiddenPlayers)
+        if (!celebrateFullTeam && spawner != null)
         {
-            if (p != null)
+            List<GameObject> allPlayers = new List<GameObject>();
+            allPlayers.AddRange(spawner.teamAPlayers);
+            allPlayers.AddRange(spawner.teamBPlayers);
+
+            foreach (var p in allPlayers)
             {
-                Renderer[] renderers = p.GetComponentsInChildren<Renderer>();
-                foreach (Renderer r in renderers)
-                    r.enabled = true;
+                if (p != null && hiddenPlayers.Contains(p))
+                {
+                    Renderer[] renderers = p.GetComponentsInChildren<Renderer>();
+                    foreach (Renderer r in renderers)
+                        r.enabled = true;
+                }
             }
         }
 
+        // ✅ Usar nueva función para restaurar cámara y reiniciar ronda
+        yield return StartCoroutine(RestoreCameraAndResetRound());
+
+        isPlayingEffect = false;
+        onComplete?.Invoke();
+
+        //Match is ended
+        if (celebrateFullTeam)
+        {
+            GameCacheManager.Instance.SaveEndResult();
+            SceneManager.LoadScene("MenuScene", LoadSceneMode.Single);
+        }
+    }
+
+    // 🔹 Nueva función pública para restaurar cámara y reiniciar ronda
+    public IEnumerator RestoreCameraAndResetRound()
+    {
         // Restaurar cámara
         if (cameraFollow != null)
         {
@@ -335,18 +376,8 @@ public class DialogAndEffectsManager : MonoBehaviour
 
         dialogResult.SetActive(false);
         textResult.gameObject.SetActive(false);
-        dialogPlus1.gameObject.SetActive(false);
+        dialogPlus1.SetActive(false);
         playerMovement.hkTaked = false;
         aiController.randomLine = Random.Range(0, 2);
-
-        isPlayingEffect = false;
-        onComplete?.Invoke();
-
-        //Match is ended
-        if (celebrateFullTeam)
-        {
-            GameCacheManager.Instance.SaveEndResult();
-            SceneManager.LoadScene("MenuScene", LoadSceneMode.Single);
-        }
     }
 }

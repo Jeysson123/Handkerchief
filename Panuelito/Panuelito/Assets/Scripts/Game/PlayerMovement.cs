@@ -102,24 +102,24 @@ public class PlayerMovement : MonoBehaviour, IPointerDownHandler, IPointerUpHand
     {
         if (currentCharacter == null || joystick == null) return;
 
-        if (!hkTaked && !aiController.returningToBase)
-        {
-            //pass line without take HK
-            if (currentCharacter.transform.position.z > -15.6)
-            {
-                judge.AddPointToIA(SettingsManager.Instance.LANGUAGE.Equals("English") ? "Player crossed the line without a handkerchief, → point IA +1."
-                    : $"Jugador cruzo linea sin panuelo, → punto IA +1.", aiController.currentAICharacter.transform);
-            }
-        }
-        else if (hkTaked)
-        {
-            //pass line now with HK to enemy base
-            if (currentCharacter.transform.position.z > -15.6)
-            {
-                judge.AddPointToIA(SettingsManager.Instance.LANGUAGE.Equals("English") ? "Player crossed the line with a handkerchief towards the wrong base, → point IA +1."
-                    : $"Jugador cruzo linea con panuelo hacia base equivocada, → punto IA +1.", aiController.currentAICharacter.transform);
-            }
-        }
+        //if (!hkTaked && !aiController.returningToBase)
+        //{
+        //    //pass line without take HK
+        //    if (currentCharacter.transform.position.z > -15.6)
+        //    {
+        //        judge.AddPointToIA(SettingsManager.Instance.LANGUAGE.Equals("English") ? "Player crossed the line without a handkerchief, → point IA +1."
+        //            : $"Jugador cruzo linea sin panuelo, → punto IA +1.", aiController.currentAICharacter.transform);
+        //    }
+        //}
+        //else if (hkTaked)
+        //{
+        //    //pass line now with HK to enemy base
+        //    if (currentCharacter.transform.position.z > -15.6)
+        //    {
+        //        judge.AddPointToIA(SettingsManager.Instance.LANGUAGE.Equals("English") ? "Player crossed the line with a handkerchief towards the wrong base, → point IA +1."
+        //            : $"Jugador cruzo linea con panuelo hacia base equivocada, → punto IA +1.", aiController.currentAICharacter.transform);
+        //    }
+        //}
 
         // Obtener forward de cámara de forma segura
         Vector3 camForward;

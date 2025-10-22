@@ -5743,11 +5743,10 @@ MonoBehaviour:
   actionCooldownMin: 0.5
   actionCooldownMax: 2
   currentAICharacter: {fileID: 0}
+  originalSpeed: 0
   returningToBase: 0
   playSlowMotion: 1
   randomLine: 0
-  idleStates:
-  - Idle
 --- !u!1001 &613923127
 PrefabInstance:
   m_ObjectHideFlags: 0

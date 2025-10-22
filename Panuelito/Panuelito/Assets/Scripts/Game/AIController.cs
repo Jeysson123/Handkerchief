@@ -49,7 +49,7 @@ public class AIController : MonoBehaviour
     {
         if (currentAICharacter == null || spawner == null || spawner.Handkerchief == null) return;
 
-        MoveTowardsTarget();
+        //MoveTowardsTarget();
         HandleFinting();
     }
 
