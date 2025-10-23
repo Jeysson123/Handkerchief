@@ -37,7 +37,6 @@ public class LandingManager : MonoBehaviour
     {
         if (logoImage == null)
         {
-            Debug.LogError("Asigna logoImage en LandingManager");
             return;
         }
 

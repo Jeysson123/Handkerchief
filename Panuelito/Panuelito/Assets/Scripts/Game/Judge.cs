@@ -293,6 +293,8 @@ public class Judge : MonoBehaviour
     // 🔥 PUNTOS CON EFECTOS
     public void AddPointToPlayer(string reason, Transform winner)
     {
+        playerMovement.currentAnimator.enabled = true;
+
         if (roundEnded) return;
         audioManager.PlayWinSound();
 
@@ -313,6 +315,8 @@ public class Judge : MonoBehaviour
 
     public void AddPointToIA(string reason, Transform winner)
     {
+        aIController.currentAnimator.enabled = true;
+
         if (roundEnded) return;
         audioManager.PlayLoseSound();
 

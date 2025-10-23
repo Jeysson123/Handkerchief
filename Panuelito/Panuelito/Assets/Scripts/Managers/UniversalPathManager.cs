@@ -30,7 +30,6 @@ public class UniversalPathManager : MonoBehaviour
     {
         if (mapName == "Parqueo") InitializeCars();
         else if (mapName == "Playa") InitializeBoats();
-        else Debug.LogWarning("⚠️ Nombre de mapa no reconocido. Usa 'Parqueo' o 'Playa'.");
     }
 
     void Update()
@@ -46,7 +45,6 @@ public class UniversalPathManager : MonoBehaviour
     {
         if (carPrefabs.Count == 0 || carPathPoints.Count == 0)
         {
-            Debug.LogWarning("⚠️ No hay prefabs o puntos definidos para el Parqueo.");
             return;
         }
 
@@ -119,7 +117,6 @@ public class UniversalPathManager : MonoBehaviour
     {
         if (boatObjects.Count == 0 || boatCenterPoint == null)
         {
-            Debug.LogWarning("⚠️ No hay barcos o punto central asignado para la Playa.");
             return;
         }
 

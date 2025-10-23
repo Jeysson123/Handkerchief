@@ -108,7 +108,6 @@ public class WeatherSystem : MonoBehaviour
         if (audioManager != null)
             StartCoroutine(SwapWeatherSound());
 
-        Debug.Log($"🌤️ Clima → {(isDay ? "Día" : "Noche")} | {(isRaining ? "Lluvia" : "Soleado")} | {(hasClouds ? "Nubes" : "Despejado")}");
     }
 
     private IEnumerator SwapWeatherSound()

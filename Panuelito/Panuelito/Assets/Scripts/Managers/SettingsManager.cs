@@ -197,6 +197,5 @@ public class SettingsManager : MonoBehaviour
         audioManager.PlayChooseSound();
         mainPanel.SetActive(true);
         settingsPanel.SetActive(false);
-        Debug.Log($"💾 Settings saved: Points={points}, Difficulty={difficulties[difficultyIndex]}, Map={maps[mapIndex]}, Sound={sound}%, Language={LANGUAGE}");
     }
 }

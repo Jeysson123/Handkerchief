@@ -205,12 +205,10 @@ public class ScenesManager : MonoBehaviour
 
     private IEnumerator LoadSceneAsync(string sceneName)
     {
-        Debug.Log($"Starting to load scene: {sceneName}");
         AsyncOperation op = SceneManager.LoadSceneAsync(sceneName);
         op.allowSceneActivation = true;
         while (!op.isDone)
             yield return null;
-        Debug.Log($"Scene loaded: {sceneName}");
     }
     #endregion
 

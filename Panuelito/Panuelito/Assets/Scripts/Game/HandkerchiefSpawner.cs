@@ -78,13 +78,11 @@ public class HandkerchiefSpawner : MonoBehaviour
         // 🟢 Restaurar solo una vez al inicio
         if (GameCacheManager.Instance != null && GameCacheManager.Instance.HasSavedGame("GameCache") && !hasRestoredOnce)
         {
-            Debug.Log("♻️ Restaurando partida desde caché...");
             hasRestoredOnce = true;
             RestoreFromCache();
         }
         else
         {
-            Debug.Log("🆕 No hay partida previa. Generando nueva...");
             SpawnAll();
             SaveInitialCache();
         }
@@ -279,7 +277,6 @@ public class HandkerchiefSpawner : MonoBehaviour
         if (judge != null)
         {
             judge.SetScores(data.playerScore, data.aiScore);
-            Debug.Log($"✅ Partida restaurada → Jugador:{data.playerScore} | IA:{data.aiScore}");
         }
     }
 

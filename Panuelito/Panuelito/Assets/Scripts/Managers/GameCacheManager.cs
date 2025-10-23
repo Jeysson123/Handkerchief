@@ -69,7 +69,6 @@ public class GameCacheManager : MonoBehaviour
         PlayerPrefs.SetString(CACHE_KEY, json);
         PlayerPrefs.Save();
 
-        Debug.Log("💾 Partida guardada en caché");
     }
 
     public void SaveEndResult()
@@ -83,7 +82,6 @@ public class GameCacheManager : MonoBehaviour
         PlayerPrefs.SetString(END_MATCH_KEY, json);
         PlayerPrefs.Save();
 
-        Debug.Log("💾 Finalizacion partida guardada en caché");
     }
 
     public GameData LoadGame()
@@ -115,7 +113,6 @@ public class GameCacheManager : MonoBehaviour
     {
         PlayerPrefs.DeleteKey(key);
         PlayerPrefs.Save();
-        Debug.Log("🧹 Caché de partida eliminada");
     }
 
     // ✅ Restaurar puntuaciones desde el caché Debug.Log($"Language: {data.language}");
@@ -125,7 +122,6 @@ public class GameCacheManager : MonoBehaviour
         if (data != null)
         {
             judge.SetScores(data.playerScore, data.aiScore);
-            Debug.Log("♻️ Puntuaciones restauradas desde caché");
         }
     }
 
