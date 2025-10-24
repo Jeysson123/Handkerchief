@@ -114,6 +114,7 @@ public class PlayerMovement : MonoBehaviour, IPointerDownHandler, IPointerUpHand
 
     void Update()
     {
+
         if (currentCharacter == null || joystick == null) return;
 
         if (!hkTaked && !aiController.returningToBase)

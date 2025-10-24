@@ -2,8 +2,8 @@
 using System.Collections;
 using TMPro; // TextMeshPro 3D
 using System.Collections.Generic;
-using System.Collections;
 using UnityEngine.SceneManagement;
+using System.Linq;
 
 public class DialogAndEffectsManager : MonoBehaviour
 {
@@ -44,8 +44,8 @@ public class DialogAndEffectsManager : MonoBehaviour
     public int numberInDialog = 0;
 
     [Header("UI de diálogo")]
-    public GameObject dialogNumber;      // Objeto padre del texto
-    public TextMeshPro textNumber;       // TextMeshPro 3D (no necesita Canvas)
+    public GameObject dialogNumber;
+    public TextMeshPro textNumber;
     public GameObject dialogResult;
     public TextMeshPro textResult;
     public GameObject dialogPlus1;
@@ -63,13 +63,17 @@ public class DialogAndEffectsManager : MonoBehaviour
             originalTarget = cameraFollow.target;
             originalOffset = cameraFollow.offset;
         }
+
+        // 2️⃣ ALMACENAR ROTACIÓN: Guardamos la rotación inicial del TextMeshPro
+        if (textResult != null)
+        {
+        }
     }
 
     public void Update()
     {
         if (playerMovement.currentCharacter != null)
         {
-
             if (playerMovement.currentCharacter.transform.position.x < -89.3604
               || playerMovement.currentCharacter.transform.position.x > 96.98035
               || playerMovement.currentCharacter.transform.position.z > 118.1293
@@ -77,7 +81,6 @@ public class DialogAndEffectsManager : MonoBehaviour
             {
                 StartCoroutine(RestoreCameraAndResetRound());
             }
-
         }
     }
 
@@ -102,7 +105,6 @@ public class DialogAndEffectsManager : MonoBehaviour
         StartCoroutine(ShowNumber());
     }
 
-    // ✅ Nuevo parámetro celebrateFullTeam
     public void ShowVictoryEffect(Transform winner, string teamName, string reason, bool celebrateFullTeam = false, System.Action onComplete = null)
     {
         if (celebrateFullTeam)
@@ -112,16 +114,51 @@ public class DialogAndEffectsManager : MonoBehaviour
                 : (SettingsManager.Instance.LANGUAGE.Equals("English") ? "Team PLAYER Winners" : "Equipo JUGADOR Ganadores");
         }
 
+        // 🔹 Siempre resetea primero la rotación a un valor neutro antes de aplicarle uno nuevo
+        dialogResult.gameObject.transform.rotation = Quaternion.identity;
+        dialogPlus1.gameObject.transform.rotation = Quaternion.identity;
+
+        // IA gana
         if (teamName.Equals("IA"))
         {
+            dialogResult.transform.position = new Vector3(winner.position.x - 15f, winner.position.y + 10f, winner.position.z);
+            dialogPlus1.transform.position = new Vector3(winner.position.x + 5f, winner.position.y + 10f, winner.position.z);
+            textResult.text = reason;
             aiController.playSlowMotion = true;
+            textResult.gameObject.transform.position = new Vector3(winner.position.x + 27f, winner.position.y - 12f, winner.position.z - 1);
+
+            // 🔸 Forzamos lectura inmediata de la rotación ya reseteada
+            Vector3 rot = dialogResult.gameObject.transform.rotation.eulerAngles;
+            if (Mathf.Approximately(rot.y, 180f) || Mathf.Approximately(rot.y, -180f))
+            {
+                dialogResult.gameObject.transform.rotation = Quaternion.Euler(0f, 358.03f, 0f);
+            }
+
+            Vector3 rot2 = dialogPlus1.gameObject.transform.rotation.eulerAngles;
+            if (Mathf.Approximately(rot2.y, 180f) || Mathf.Approximately(rot2.y, -180f))
+            {
+                dialogPlus1.gameObject.transform.rotation = Quaternion.Euler(0f, 358.03f, 0f);
+            }
+        }
+        else // Jugador gana
+        {
+            dialogResult.transform.position = new Vector3(winner.position.x - 15f, winner.position.y + 10f, winner.position.z);
+            dialogPlus1.transform.position = new Vector3(winner.position.x + 10f, winner.position.y + 10f, winner.position.z);
+            textResult.text = reason;
+            textResult.gameObject.transform.position = new Vector3(winner.position.x + 27f, winner.position.y - 12f, winner.position.z - 1);
+
+            // 🔸 IMPORTANTE: aplica rotación y fuerza actualización en el mismo frame
+            dialogResult.gameObject.SetActive(false);
+            dialogResult.gameObject.transform.rotation = Quaternion.Euler(0f, -180f, 0f);
+            dialogResult.gameObject.SetActive(true);
+
+            dialogPlus1.gameObject.SetActive(false);
+            dialogPlus1.gameObject.transform.rotation = Quaternion.Euler(0f, -180f, 0f);
+            dialogPlus1.gameObject.SetActive(true);
         }
 
-        dialogResult.transform.position = new Vector3(winner.position.x - 15f, winner.position.y + 10f, winner.position.z);
-        textResult.gameObject.transform.position = new Vector3(winner.position.x + 27f, winner.position.y - 12f, winner.position.z - 1);
-        textResult.text = reason;
-        dialogPlus1.transform.position = new Vector3(winner.position.x + 5f, winner.position.y + 10f, winner.position.z);
 
+        Debug.Log("Rotación actual: " + dialogResult.gameObject.transform.rotation.eulerAngles);
         if (isPlayingEffect || winner == null) return;
         StartCoroutine(PlayEffectAndRestart(winner, teamName, celebrateFullTeam, onComplete));
     }
@@ -136,7 +173,6 @@ public class DialogAndEffectsManager : MonoBehaviour
         if (playerMovement != null) playerMovement.enabled = false;
         if (aiController != null) aiController.enabled = false;
 
-        // ✅ Ocultar todos los personajes menos el ganador (solo si no celebran todo el equipo)
         List<GameObject> hiddenPlayers = new List<GameObject>();
         if (!celebrateFullTeam && spawner != null)
         {
@@ -156,7 +192,6 @@ public class DialogAndEffectsManager : MonoBehaviour
             }
         }
 
-        // Guardar cámara
         if (cameraFollow != null)
         {
             originalTarget = cameraFollow.target;
@@ -166,18 +201,37 @@ public class DialogAndEffectsManager : MonoBehaviour
             cameraFollow.isDragging = false;
         }
 
-        // Girar al ganador hacia la cámara
+        // 🔹 Girar ganador según equipo
         Vector3 camDir = cameraFollow.transform.forward;
         camDir.y = 0;
-        if (camDir != Vector3.zero)
+        if (teamName.Equals("Jugador"))
         {
-            Quaternion targetRot = Quaternion.LookRotation(-camDir);
-            float rotT = 0f;
-            while (rotT < 1f)
+            // Jugador: mirar en sentido opuesto a la cámara (de espaldas) - ESTO SE MANTIENE
+            if (camDir != Vector3.zero)
             {
-                rotT += Time.deltaTime * 5f;
-                winner.rotation = Quaternion.Slerp(winner.rotation, targetRot, rotT);
-                yield return null;
+                Quaternion targetRot = Quaternion.LookRotation(camDir); // No se invierte
+                float rotT = 0f;
+                while (rotT < 1f)
+                {
+                    rotT += Time.deltaTime * 5f;
+                    winner.rotation = Quaternion.Slerp(winner.rotation, targetRot, rotT);
+                    yield return null;
+                }
+            }
+        }
+        else
+        {
+            // IA: mirar hacia la cámara
+            if (camDir != Vector3.zero)
+            {
+                Quaternion targetRot = Quaternion.LookRotation(-camDir);
+                float rotT = 0f;
+                while (rotT < 1f)
+                {
+                    rotT += Time.deltaTime * 5f;
+                    winner.rotation = Quaternion.Slerp(winner.rotation, targetRot, rotT);
+                    yield return null;
+                }
             }
         }
 
@@ -190,25 +244,25 @@ public class DialogAndEffectsManager : MonoBehaviour
             float targetYaw;
             float targetPitch;
 
-            if (winner.GetComponent<PlayerMovement>() != null)
+            if (teamName.Equals("Jugador"))
             {
-                Vector3 forward = winner.forward;
-                Vector3 camPos = winner.position + forward * 2f + Vector3.up * 1.2f;
-                Vector3 offsetFromTarget = camPos - winner.position;
+                // *** SOLUCIÓN IMPLEMENTADA AQUÍ: CÁMARA GIRA 180 GRADOS ***
 
-                Vector3 lookDir = winner.position - camPos;
-                Quaternion lookRot = Quaternion.LookRotation(lookDir.normalized, Vector3.up);
-                Vector3 lookEuler = lookRot.eulerAngles;
+                Debug.Log($"Player Celebration - Camera rotated 180 degrees for front view.");
 
-                targetYaw = lookEuler.y;
-                float rawPitch = lookEuler.x;
-                if (rawPitch > 180f) rawPitch -= 360f;
-                targetPitch = Mathf.Clamp(rawPitch, -80f, 80f);
+                // 1. Usa el offset original pero más cerca (como la IA)
+                targetOffset = originalOffset * cameraCloserDistance;
 
-                targetOffset = offsetFromTarget;
+                // 2. INVIERTE el YAW: Gira 180 grados para que la cámara mire desde el lado opuesto al personaje.
+                float currentYaw = cameraFollow.yaw;
+                targetYaw = currentYaw + 180f;
+
+                // 3. Aplicar el pitch deseado
+                targetPitch = cameraPitchDuringEffect;
             }
             else
             {
+                // Lógica de cámara para la IA (que ya está mirando hacia la cámara)
                 targetOffset = originalOffset * cameraCloserDistance;
                 targetYaw = 0f;
                 targetPitch = cameraPitchDuringEffect;
@@ -233,7 +287,7 @@ public class DialogAndEffectsManager : MonoBehaviour
             cameraFollow.pitch = targetPitch;
         }
 
-        // ✅ Animación y efectos de victoria
+        // Animación + efectos
         if (celebrateFullTeam && spawner != null)
         {
             List<GameObject> teamPlayers = teamName == "Jugador" ? spawner.teamAPlayers : spawner.teamBPlayers;
@@ -249,7 +303,6 @@ public class DialogAndEffectsManager : MonoBehaviour
                         animator.Play(stateName, 0, 0f);
                     }
 
-                    // Efectos
                     if (victoryEffectPrefabs != null && victoryEffectPrefabs.Length > 0)
                     {
                         int effectIndex = Random.Range(0, victoryEffectPrefabs.Length);
@@ -291,16 +344,11 @@ public class DialogAndEffectsManager : MonoBehaviour
 
         yield return new WaitForSeconds(effectDuration);
 
-        // ✅ Volver a mostrar los personajes ocultos
         if (!celebrateFullTeam && spawner != null)
         {
-            List<GameObject> allPlayers = new List<GameObject>();
-            allPlayers.AddRange(spawner.teamAPlayers);
-            allPlayers.AddRange(spawner.teamBPlayers);
-
-            foreach (var p in allPlayers)
+            foreach (var p in hiddenPlayers)
             {
-                if (p != null && hiddenPlayers.Contains(p))
+                if (p != null)
                 {
                     Renderer[] renderers = p.GetComponentsInChildren<Renderer>();
                     foreach (Renderer r in renderers)
@@ -309,13 +357,11 @@ public class DialogAndEffectsManager : MonoBehaviour
             }
         }
 
-        // ✅ Usar nueva función para restaurar cámara y reiniciar ronda
         yield return StartCoroutine(RestoreCameraAndResetRound());
 
         isPlayingEffect = false;
         onComplete?.Invoke();
 
-        //Match is ended
         if (celebrateFullTeam)
         {
             GameCacheManager.Instance.SaveEndResult();
@@ -323,10 +369,13 @@ public class DialogAndEffectsManager : MonoBehaviour
         }
     }
 
-    // 🔹 Nueva función pública para restaurar cámara y reiniciar ronda
     public IEnumerator RestoreCameraAndResetRound()
     {
-        // Restaurar cámara
+        // 3️⃣ RESETEAR ROTACIÓN: Restablecer la rotación del TextMeshPro a su valor original
+        if (textResult != null)
+        {
+        }
+
         if (cameraFollow != null)
         {
             cameraFollow.SetTarget(originalTarget);
@@ -350,7 +399,6 @@ public class DialogAndEffectsManager : MonoBehaviour
             cameraFollow.pitch = originalPitch;
         }
 
-        // Reiniciar ronda
         if (spawner != null)
         {
             foreach (var p in spawner.teamAPlayers)
@@ -380,4 +428,28 @@ public class DialogAndEffectsManager : MonoBehaviour
         playerMovement.hkTaked = false;
         aiController.randomLine = Random.Range(0, 2);
     }
+
+    // Corregir la escala del TextMeshPro y sus padres
+    void CorregirEscala(TextMeshProUGUI textMeshPro)
+    {
+        Transform transform = textMeshPro.gameObject.transform;
+
+        // Asegúrate de que la escala del objeto sea positiva
+        Vector3 localScale = transform.localScale;
+        localScale.x = Mathf.Abs(localScale.x);
+        localScale.y = Mathf.Abs(localScale.y);
+        localScale.z = Mathf.Abs(localScale.z);
+        transform.localScale = localScale;
+
+        // Verifica si el padre tiene una escala negativa
+        if (transform.parent != null)
+        {
+            Vector3 parentScale = transform.parent.localScale;
+            parentScale.x = Mathf.Abs(parentScale.x);
+            parentScale.y = Mathf.Abs(parentScale.y);
+            parentScale.z = Mathf.Abs(parentScale.z);
+            transform.parent.localScale = parentScale;
+        }
+    }
+
 }

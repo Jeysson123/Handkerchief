@@ -3360,14 +3360,15 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 451860386}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -168.5, y: -27.8, z: -1.9}
+  m_LocalRotation: {x: -0, y: 0.017220011, z: -0, w: -0.9998518}
+  m_LocalPosition: {x: -168.5, y: -24.92, z: -1.9}
   m_LocalScale: {x: 20, y: 10, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 775137833}
   m_Father: {fileID: 1119694792}
   m_RootOrder: -1
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: -361.973, z: 0}
 --- !u!65 &451860388
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -4330,6 +4331,7 @@ MonoBehaviour:
   takeDistance: 2
   currentSpeed: 0
   currentCharacter: {fileID: 0}
+  currentAnimator: {fileID: 0}
   hkTaked: 0
 --- !u!114 &504965976
 MonoBehaviour:
@@ -4362,7 +4364,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   spawner: {fileID: 0}
-  effectDuration: 2.5
+  effectDuration: 3
   victoryEffectPrefabs:
   - {fileID: 7155335147208632822, guid: 97c43495f80a3244fad1301dfafbe252, type: 3}
   - {fileID: 6126188424833946103, guid: a58aa9a78f2b45b45bb0f3e2e1e3ad3c, type: 3}
@@ -6376,16 +6378,16 @@ RectTransform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 775137832}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: -7.7}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalPosition: {x: 0, y: 0, z: -1.9}
+  m_LocalScale: {x: 0.05, y: 0.1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 1119694792}
+  m_Father: {fileID: 451860387}
   m_RootOrder: -1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -127.8, y: -47.3}
+  m_AnchoredPosition: {x: 2.091, y: -2.06}
   m_SizeDelta: {x: 100, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!23 &775137835
@@ -8855,7 +8857,6 @@ Transform:
   - {fileID: 873181291}
   - {fileID: 266195418}
   - {fileID: 451860387}
-  - {fileID: 775137833}
   - {fileID: 3579781}
   m_Father: {fileID: 897392988}
   m_RootOrder: -1
@@ -12826,6 +12827,7 @@ MonoBehaviour:
   actionCooldownMin: 0.5
   actionCooldownMax: 2
   currentAICharacter: {fileID: 0}
+  currentAnimator: {fileID: 0}
   originalSpeed: 0
   returningToBase: 0
   playSlowMotion: 1
