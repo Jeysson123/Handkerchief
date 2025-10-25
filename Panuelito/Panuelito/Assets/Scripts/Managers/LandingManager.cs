@@ -35,6 +35,13 @@ public class LandingManager : MonoBehaviour
 
     void Start()
     {
+
+        Screen.orientation = ScreenOrientation.LandscapeLeft;
+        Screen.autorotateToPortrait = false;
+        Screen.autorotateToPortraitUpsideDown = false;
+        Screen.autorotateToLandscapeLeft = true;
+        Screen.autorotateToLandscapeRight = true;
+
         if (logoImage == null)
         {
             return;
@@ -199,6 +206,14 @@ public class LandingManager : MonoBehaviour
     IEnumerator LoadNextSceneAfterDelay()
     {
         yield return new WaitForSeconds(duration);
+        
+        // Destruir EventSystem de esta escena antes de cambiar
+        UnityEngine.EventSystems.EventSystem eventSystem = FindObjectOfType<UnityEngine.EventSystems.EventSystem>();
+        if (eventSystem != null)
+        {
+            Destroy(eventSystem.gameObject);
+        }
+        
         SceneManager.LoadScene(nextScene);
     }
 }

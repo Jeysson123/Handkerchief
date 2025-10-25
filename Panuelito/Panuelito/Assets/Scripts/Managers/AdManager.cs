@@ -32,7 +32,10 @@ public class AdManager : MonoBehaviour
 
     private void LoadInterstitial()
     {
-        InterstitialAd.Load(adUnitId, null, (InterstitialAd ad, LoadAdError error) =>
+        // Agregar request con configuración para evitar problemas
+        AdRequest request = new AdRequest();
+        
+        InterstitialAd.Load(adUnitId, request, (InterstitialAd ad, LoadAdError error) =>
         {
             if (error != null)
             {
@@ -57,19 +60,21 @@ public class AdManager : MonoBehaviour
             interstitial.OnAdFullScreenContentFailed += (AdError adError) =>
             {
                 Debug.LogError("Interstitial falló: " + adError);
+                LoadInterstitial(); // Intentar cargar otro
             };
         });
     }
 
     public void ShowInterstitial()
     {
-        if (interstitial != null)
+        if (interstitial != null && interstitial.CanShowAd())
         {
+            Debug.Log("Mostrando interstitial");
             interstitial.Show();
         }
         else
         {
-            Debug.Log("Interstitial aún no cargado, cargando uno nuevo...");
+            Debug.Log("Interstitial aún no cargado o no puede mostrarse");
             LoadInterstitial();
         }
     }

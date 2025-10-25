@@ -66,7 +66,8 @@ public class ScenesManager : MonoBehaviour
         }
         else
         {
-            FindObjectOfType<AdManager>().ShowInterstitial(); //Play ADS
+            // Mostrar ads con delay para no bloquear UI
+            StartCoroutine(ShowAdsWithDelay(1f));
         }
     }
 
@@ -81,6 +82,10 @@ public class ScenesManager : MonoBehaviour
         Screen.autorotateToLandscapeLeft = true;
         Screen.autorotateToLandscapeRight = true;
 
+        // Forzar multi-touch en Android
+        Input.multiTouchEnabled = true;
+
+        Debug.Log("[ScenesManager] Registrando listeners de botones");
         playButton?.onClick.AddListener(PlayGame);
         settingsButton?.onClick.AddListener(ShowSettings);
         restoreYesButton?.onClick.AddListener(RestoreGame);
@@ -135,6 +140,7 @@ public class ScenesManager : MonoBehaviour
     #region Paneles
     public void ShowSettings()
     {
+        Debug.Log("[ScenesManager] ShowSettings llamado");
         audioManager?.PlayChooseSound();
         mainPanel?.SetActive(false);
         settingsPanel?.SetActive(true);
@@ -179,6 +185,7 @@ public class ScenesManager : MonoBehaviour
     #region Juego
     public void PlayGame()
     {
+        Debug.Log("[ScenesManager] PlayGame llamado");
         audioManager?.StopBackgroundMusic();
         audioManager?.PlayChooseSound();
         mainPanel?.SetActive(false);
@@ -352,6 +359,20 @@ public class ScenesManager : MonoBehaviour
 
         currentModalObjects.Clear();
 
+    }
+
+    private IEnumerator ShowAdsWithDelay(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        AdManager adManager = FindObjectOfType<AdManager>();
+        if (adManager != null)
+        {
+            adManager.ShowInterstitial();
+        }
+        else
+        {
+            Debug.LogWarning("[ScenesManager] AdManager no encontrado");
+        }
     }
     #endregion
 }
