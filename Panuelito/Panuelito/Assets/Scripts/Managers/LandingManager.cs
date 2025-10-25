@@ -19,10 +19,9 @@ public class LandingManager : MonoBehaviour
     public string gameName = "Handkerchief";
 
     [Header("Configuración de animación")]
-    public float letterSpacing = 70f;
     public float letterSpeed = 700f;
     public float letterDelay = 0.08f;
-    public float logoScreenHeightPercent = 0.8f;
+    public float logoScreenHeightPercent = 0.1f;
     public float fontScreenHeightPercent = 0.12f;
     public float minFontScale = 0.6f;
 
@@ -35,55 +34,32 @@ public class LandingManager : MonoBehaviour
 
     void Start()
     {
-
         Screen.orientation = ScreenOrientation.LandscapeLeft;
         Screen.autorotateToPortrait = false;
         Screen.autorotateToPortraitUpsideDown = false;
         Screen.autorotateToLandscapeLeft = true;
         Screen.autorotateToLandscapeRight = true;
 
-        if (logoImage == null)
-        {
-            return;
-        }
+        if (logoImage == null) return;
 
         // Obtener o crear Canvas
-        canvas = logoImage.canvas;
+        canvas = logoImage.canvas ?? FindObjectOfType<Canvas>();
         if (canvas == null)
         {
-            canvas = FindObjectOfType<Canvas>();
-            if (canvas == null)
-            {
-                GameObject canvasGO = new GameObject("Canvas");
-                canvas = canvasGO.AddComponent<Canvas>();
-                canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-                CanvasScaler scaler = canvasGO.AddComponent<CanvasScaler>();
-                scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-                scaler.referenceResolution = new Vector2(1920, 1080);
-                scaler.matchWidthOrHeight = 0.5f;
-                canvasGO.AddComponent<GraphicRaycaster>();
-            }
+            GameObject canvasGO = new GameObject("Canvas");
+            canvas = canvasGO.AddComponent<Canvas>();
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            CanvasScaler scaler = canvasGO.AddComponent<CanvasScaler>();
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(1920, 1080);
+            scaler.matchWidthOrHeight = 0.5f;
+            canvasGO.AddComponent<GraphicRaycaster>();
             logoImage.transform.SetParent(canvas.transform, false);
         }
 
-        // Crear background
         CreateBackgroundEffect();
+        SetupLogo();
 
-        // Ajustar tamaño del logo manteniendo proporción
-        RectTransform logoRT = logoImage.GetComponent<RectTransform>();
-        float canvasHeight = canvas.GetComponent<RectTransform>().rect.height;
-        float logoHeight = canvasHeight * logoScreenHeightPercent;
-        float ratio = logoImage.sprite.bounds.size.x / logoImage.sprite.bounds.size.y;
-        float logoWidth = logoHeight * ratio;
-        logoRT.sizeDelta = new Vector2(logoWidth, logoHeight);
-
-        // Posicionar logo a la izquierda
-        logoRT.anchorMin = new Vector2(0f, 0.5f);
-        logoRT.anchorMax = new Vector2(0f, 0.5f);
-        logoRT.pivot = new Vector2(0f, 0.5f);
-        logoRT.anchoredPosition = new Vector2(50f, 0f);
-
-        // Iniciar animaciones
         StartCoroutine(AnimateTextFromLogo());
         StartCoroutine(AnimateBackground());
         StartCoroutine(WaveLogo());
@@ -96,7 +72,7 @@ public class LandingManager : MonoBehaviour
         bgGO.transform.SetParent(canvas.transform, false);
 
         backgroundImage = bgGO.AddComponent<Image>();
-        backgroundImage.color = new Color(0.3f, 0.5f, 0.9f, 1f); // azul claro inicial
+        backgroundImage.color = new Color(0.3f, 0.5f, 0.9f, 1f);
 
         RectTransform bgRT = backgroundImage.GetComponent<RectTransform>();
         bgRT.anchorMin = Vector2.zero;
@@ -104,16 +80,30 @@ public class LandingManager : MonoBehaviour
         bgRT.offsetMin = Vector2.zero;
         bgRT.offsetMax = Vector2.zero;
 
-        // Asegurar que esté detrás de todo
         backgroundImage.transform.SetAsFirstSibling();
+    }
+
+    private void SetupLogo()
+    {
+        RectTransform logoRT = logoImage.GetComponent<RectTransform>();
+        float canvasHeight = canvas.GetComponent<RectTransform>().rect.height;
+        float logoHeight = canvasHeight * logoScreenHeightPercent;
+        float ratio = logoImage.sprite.bounds.size.x / logoImage.sprite.bounds.size.y;
+        float logoWidth = logoHeight * ratio;
+        logoRT.sizeDelta = new Vector2(logoWidth, logoHeight);
+
+        logoRT.anchorMin = new Vector2(0f, 0.5f);
+        logoRT.anchorMax = new Vector2(0f, 0.5f);
+        logoRT.pivot = new Vector2(0f, 0.5f);
+        logoRT.anchoredPosition = new Vector2(50f, 0f);
     }
 
     IEnumerator AnimateBackground()
     {
-        Color startColor = new Color(0.3f, 0.5f, 0.9f, 1f); // Azul claro
-        Color endColor = new Color(0.02f, 0.05f, 0.1f, 1f); // Azul oscuro casi negro
-
+        Color startColor = new Color(0.3f, 0.5f, 0.9f, 1f);
+        Color endColor = new Color(0.02f, 0.05f, 0.1f, 1f);
         float elapsed = 0f;
+
         while (elapsed < duration)
         {
             elapsed += Time.deltaTime;
@@ -121,26 +111,43 @@ public class LandingManager : MonoBehaviour
             backgroundImage.color = Color.Lerp(startColor, endColor, t);
             yield return null;
         }
-
         backgroundImage.color = endColor;
     }
 
     IEnumerator AnimateTextFromLogo()
     {
         RectTransform logoRT = logoImage.rectTransform;
-        float canvasHeight = canvas.GetComponent<RectTransform>().rect.height;
         float canvasWidth = canvas.GetComponent<RectTransform>().rect.width;
+        float canvasHeight = canvas.GetComponent<RectTransform>().rect.height;
         float baseFontSize = canvasHeight * fontScreenHeightPercent;
 
-        Vector2 startPos = logoRT.anchoredPosition + new Vector2(logoRT.sizeDelta.x + 20f, 0f);
-        float availableWidth = canvasWidth - startPos.x - 40f;
+        // Medir letras
+        float[] letterWidths = new float[gameName.Length];
+        float totalWidth = 0f;
+        for (int i = 0; i < gameName.Length; i++)
+        {
+            GameObject tempGO = new GameObject();
+            TextMeshProUGUI tmp = tempGO.AddComponent<TextMeshProUGUI>();
+            tmp.text = gameName[i].ToString();
+            tmp.enableAutoSizing = true;
+            tmp.fontSizeMin = baseFontSize * minFontScale;
+            tmp.fontSizeMax = baseFontSize;
+            tmp.fontStyle = FontStyles.Bold | FontStyles.UpperCase;
+            tmp.enableWordWrapping = false;
+            Vector2 pref = tmp.GetPreferredValues();
+            letterWidths[i] = pref.x;
+            totalWidth += pref.x;
+            Destroy(tempGO);
+        }
 
-        float maxLetterSpacing = availableWidth / (gameName.Length + 1);
-        float adjustedLetterSpacing = Mathf.Min(letterSpacing, maxLetterSpacing);
+        // Escalar si excede canvas
+        float availableWidth = canvasWidth - 40f - logoRT.anchoredPosition.x;
+        float scaleFactor = totalWidth > availableWidth ? availableWidth / totalWidth : 1f;
 
-        float totalTextWidth = adjustedLetterSpacing * gameName.Length;
-        float generalScale = Mathf.Min(1f, availableWidth / totalTextWidth);
-        baseFontSize *= generalScale;
+        // Ajustar posición inicial más cerca del logo
+        float currentX = logoRT.anchoredPosition.x + logoRT.sizeDelta.x - 500f; // Cambiado de 20f a 5f
+        float extraOffset = (availableWidth - totalWidth * scaleFactor) / 2f;
+        currentX += extraOffset;
 
         for (int i = 0; i < gameName.Length; i++)
         {
@@ -155,20 +162,21 @@ public class LandingManager : MonoBehaviour
             letterText.enableWordWrapping = false;
             letterText.fontStyle = FontStyles.Bold | FontStyles.UpperCase;
 
+            // AutoSize con factor de escala
+            letterText.enableAutoSizing = true;
+            letterText.fontSizeMin = baseFontSize * minFontScale * scaleFactor;
+            letterText.fontSizeMax = baseFontSize * scaleFactor;
+
             RectTransform rt = letterText.GetComponent<RectTransform>();
-            rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.pivot = new Vector2(0f, 0.5f);
             rt.anchorMin = new Vector2(0f, 0.5f);
             rt.anchorMax = new Vector2(0f, 0.5f);
 
-            float fontSize = baseFontSize * Mathf.Lerp(1f, minFontScale, (float)i / (gameName.Length - 1));
-            letterText.fontSize = fontSize;
-            rt.sizeDelta = new Vector2(fontSize, fontSize);
+            Vector2 targetPos = new Vector2(currentX, logoRT.anchoredPosition.y);
+            rt.anchoredPosition = logoRT.anchoredPosition; // Start desde logo
+            StartCoroutine(MoveLetter(rt, targetPos));
 
-            float xPos = (i + 1) * adjustedLetterSpacing;
-            rt.anchoredPosition = startPos + new Vector2(xPos, 0f);
-            rt.anchoredPosition -= new Vector2(logoRT.sizeDelta.x * 0.2f, 0f);
-
-            StartCoroutine(MoveLetter(rt, startPos + new Vector2(xPos, 0f)));
+            currentX += letterWidths[i] * scaleFactor;
             yield return new WaitForSeconds(letterDelay);
         }
     }
@@ -185,7 +193,6 @@ public class LandingManager : MonoBehaviour
             rt.anchoredPosition = Vector3.Lerp(startPos, endPos, t);
             yield return null;
         }
-
         rt.anchoredPosition = endPos;
     }
 
@@ -193,6 +200,7 @@ public class LandingManager : MonoBehaviour
     {
         RectTransform logoRT = logoImage.rectTransform;
         float elapsed = 0f;
+
         while (elapsed < duration)
         {
             elapsed += Time.deltaTime;
@@ -206,14 +214,10 @@ public class LandingManager : MonoBehaviour
     IEnumerator LoadNextSceneAfterDelay()
     {
         yield return new WaitForSeconds(duration);
-        
-        // Destruir EventSystem de esta escena antes de cambiar
+
         UnityEngine.EventSystems.EventSystem eventSystem = FindObjectOfType<UnityEngine.EventSystems.EventSystem>();
-        if (eventSystem != null)
-        {
-            Destroy(eventSystem.gameObject);
-        }
-        
+        if (eventSystem != null) Destroy(eventSystem.gameObject);
+
         SceneManager.LoadScene(nextScene);
     }
 }
