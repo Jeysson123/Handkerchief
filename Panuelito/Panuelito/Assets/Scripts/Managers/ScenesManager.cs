@@ -57,16 +57,14 @@ public class ScenesManager : MonoBehaviour
             }
             else
             {
-
                 StartCoroutine(LoadSceneAsync("MenuScene"));
-
             }
 
             endMsg = string.Empty;
         }
         else
         {
-            // Mostrar ads con delay para no bloquear UI
+            // Mostrar ads al inicio con delay
             StartCoroutine(ShowAdsWithDelay(1f));
         }
     }
@@ -82,10 +80,8 @@ public class ScenesManager : MonoBehaviour
         Screen.autorotateToLandscapeLeft = true;
         Screen.autorotateToLandscapeRight = true;
 
-        // Forzar multi-touch en Android
         Input.multiTouchEnabled = true;
 
-        Debug.Log("[ScenesManager] Registrando listeners de botones");
         playButton?.onClick.AddListener(PlayGame);
         settingsButton?.onClick.AddListener(ShowSettings);
         restoreYesButton?.onClick.AddListener(RestoreGame);
@@ -128,19 +124,17 @@ public class ScenesManager : MonoBehaviour
         }
 
         GameObject modal = GameObject.Find("EndGameModal");
-        if(modal != null)
+        if (modal != null)
         {
             Destroy(modal, 3f);
             GameObject effect = GameObject.Find("ScreenEffect");
             Destroy(effect, 3f);
         }
-
     }
 
     #region Paneles
     public void ShowSettings()
     {
-        Debug.Log("[ScenesManager] ShowSettings llamado");
         audioManager?.PlayChooseSound();
         mainPanel?.SetActive(false);
         settingsPanel?.SetActive(true);
@@ -185,7 +179,8 @@ public class ScenesManager : MonoBehaviour
     #region Juego
     public void PlayGame()
     {
-        Debug.Log("[ScenesManager] PlayGame llamado");
+        StartCoroutine(ShowAdsWithDelay(1f));
+
         audioManager?.StopBackgroundMusic();
         audioManager?.PlayChooseSound();
         mainPanel?.SetActive(false);
@@ -311,7 +306,6 @@ public class ScenesManager : MonoBehaviour
             currentModalObjects.Add(confetti);
         }
 
-        // Destruir modal después de 'duration'
         StartCoroutine(HideModalAfterDurationAndClear(duration));
     }
 
@@ -320,12 +314,10 @@ public class ScenesManager : MonoBehaviour
         ShowEndGameModal(message, duration);
         yield return new WaitForSeconds(duration);
 
-        // Destruye todos los objetos del modal antes de cambiar de escena
         foreach (var obj in currentModalObjects)
             if (obj != null) Destroy(obj);
         currentModalObjects.Clear();
 
-        // Carga la escena
         AsyncOperation op = SceneManager.LoadSceneAsync(sceneName);
         op.allowSceneActivation = true;
         while (!op.isDone)
@@ -354,11 +346,21 @@ public class ScenesManager : MonoBehaviour
     {
         yield return new WaitForSeconds(duration);
 
+        // Mostrar interstitial justo cuando el modal se cierra
+        AdManager adManager = FindObjectOfType<AdManager>();
+        if (adManager != null)
+        {
+            adManager.ShowInterstitial();
+        }
+        else
+        {
+            Debug.LogWarning("[ScenesManager] AdManager no encontrado al cerrar modal");
+        }
+
         foreach (var obj in currentModalObjects)
             if (obj != null) Destroy(obj);
 
         currentModalObjects.Clear();
-
     }
 
     private IEnumerator ShowAdsWithDelay(float delay)
