@@ -1351,16 +1351,16 @@ RectTransform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 183652247}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: -7.7}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalPosition: {x: 0, y: 0, z: -5.799997}
+  m_LocalScale: {x: 0.05, y: 0.1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 1019744813}
+  m_Father: {fileID: 1795399061}
   m_RootOrder: -1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -127.8, y: -47.3}
+  m_AnchoredPosition: {x: 2.0350037, y: -1.9500008}
   m_SizeDelta: {x: 100, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &183652249
@@ -4818,6 +4818,7 @@ MonoBehaviour:
   takeDistance: 2
   currentSpeed: 0
   currentCharacter: {fileID: 0}
+  currentAnimator: {fileID: 0}
   hkTaked: 0
 --- !u!114 &527162025
 MonoBehaviour:
@@ -5743,6 +5744,7 @@ MonoBehaviour:
   actionCooldownMin: 0.5
   actionCooldownMax: 2
   currentAICharacter: {fileID: 0}
+  currentAnimator: {fileID: 0}
   originalSpeed: 0
   returningToBase: 0
   playSlowMotion: 1
@@ -9543,7 +9545,6 @@ Transform:
   - {fileID: 1810718623}
   - {fileID: 1839750062}
   - {fileID: 1795399061}
-  - {fileID: 183652248}
   - {fileID: 2040912638}
   m_Father: {fileID: 1960872370}
   m_RootOrder: -1
@@ -11915,7 +11916,7 @@ RectTransform:
   m_AnchorMin: {x: 1, y: 1}
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: -169, y: -97}
-  m_SizeDelta: {x: 200, y: 50}
+  m_SizeDelta: {x: 300, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1001 &1245186793
 PrefabInstance:
@@ -16865,7 +16866,8 @@ Transform:
   m_LocalPosition: {x: -168.5, y: -27.8, z: -1.9}
   m_LocalScale: {x: 20, y: 10, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 183652248}
   m_Father: {fileID: 1019744813}
   m_RootOrder: -1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -19850,7 +19852,7 @@ RectTransform:
   m_AnchorMin: {x: 1, y: 1}
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: -237, y: -159}
-  m_SizeDelta: {x: 200, y: 50}
+  m_SizeDelta: {x: 300, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1001 &2111058217
 PrefabInstance:

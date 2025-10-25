@@ -42,6 +42,22 @@ public class Judge : MonoBehaviour
 
     private void Start()
     {
+
+        //SPECIAL CASE -> ALIGMENT IA
+        if (SettingsManager.Instance.LANGUAGE.Equals("Spanish") && updateIATextPosition)
+        {
+            playerScoreText.transform.position += new Vector3(-35f, 0f, 0f);
+            aiScoreText.transform.position += new Vector3(-18f, 0f, 0f);
+        }
+
+        if (SettingsManager.Instance.LANGUAGE.Equals("English") && updateIATextPosition)
+        {
+            playerScoreText.transform.position += new Vector3(18f, 0f, 0f);
+            aiScoreText.transform.position += new Vector3(16f, 0f, 0f);
+        }
+
+        updateIATextPosition = false;
+
         spawner = FindObjectOfType<HandkerchiefSpawner>();
         playerMovement = FindObjectOfType<PlayerMovement>();
         aIController = FindObjectOfType<AIController>();
@@ -377,13 +393,6 @@ public class Judge : MonoBehaviour
     {
         string labelPlayer = SettingsManager.Instance.LANGUAGE.Equals("English") ? "Player" : "Jugador";
         string labelIA = SettingsManager.Instance.LANGUAGE.Equals("English") ? "IA" : "Maquina";
-
-        //SPECIAL CASE -> ALIGMENT IA
-        if (SettingsManager.Instance.LANGUAGE.Equals("Spanish") && updateIATextPosition)
-        {
-            aiScoreText.transform.position += new Vector3(30f, 0f, 0f);
-            updateIATextPosition = false;
-        }
 
         if (playerScoreText != null)
             playerScoreText.text = $"{labelPlayer} : {playerScore}";

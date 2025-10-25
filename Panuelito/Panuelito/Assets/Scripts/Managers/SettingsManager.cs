@@ -129,6 +129,9 @@ public class SettingsManager : MonoBehaviour
     {
         // 🔹 Sin límite superior, solo evita que sea negativo
         points = Mathf.Max(points + delta, 0);
+        if (points <= 1) points = 1;
+        if (points >= 50) points = 50;
+
         UpdateUI();
     }
 
