@@ -265,7 +265,7 @@ public class ScenesManager : MonoBehaviour
         RectTransform panelRect = panelGO.GetComponent<RectTransform>();
         panelRect.anchorMin = new Vector2(0.5f, 0.5f);
         panelRect.anchorMax = new Vector2(0.5f, 0.5f);
-        panelRect.sizeDelta = new Vector2(1300, 600);
+        panelRect.sizeDelta = new Vector2(2000, 1000);
         panelRect.anchoredPosition = Vector2.zero;
         currentModalObjects.Add(panelGO);
 
@@ -273,7 +273,7 @@ public class ScenesManager : MonoBehaviour
         textGO.transform.SetParent(panelGO.transform);
         TextMeshProUGUI textTMP = textGO.AddComponent<TextMeshProUGUI>();
         textTMP.text = message;
-        textTMP.fontSize = 50;
+        textTMP.fontSize = 200;
         textTMP.alignment = TextAlignmentOptions.Center;
         textTMP.color = Color.black;
         textTMP.enableWordWrapping = true;
